@@ -109,7 +109,7 @@ exports.seed = function(knex, Promise) {
             user4 = ids[0][0];
             return Promise.join(
                 knex('resources').insert({
-                  resource_name: 'Vinces Spot',
+                  resourceName: 'Vinces Spot',
                   appFeePercentageTake:  0,
                   appFeeFlatFeeTake: 100,
                   bookingPercentTake: 0,
@@ -119,7 +119,7 @@ exports.seed = function(knex, Promise) {
                   cancellationPolicyPercentTake: 0,
                   cancellationPolicyFlatFeeTake: 100,
                   cancellationPolicyWindow: 18,
-                  street_address: '2941 lamplight ln',
+                  streetAddress: '2941 lamplight ln',
                   city: 'Cleveland',
                   state: 'OH',
                   zipcode: 44094,

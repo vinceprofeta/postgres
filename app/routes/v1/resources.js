@@ -10,25 +10,25 @@ var hasRole = require('../../utils/roleMiddleware');
 var Listings// = require('../../models/listings');
 
 // Controllers
-var SessionsController = require('../../controllers/sessions');
-var ListingsController = require('../../controllers/listings');
+var SessionsController //= require('../../controllers/sessions');
+var ResourcesController = require('../../controllers/resources');
 
 router.route('/')
   .post(function(req, res) {
     
   })
   .get(function(req, res) {
-    ListingsController.getListings(req.query)
-    .then(function(listings) {
-      res.json(listings);
+    ResourcesController.getResources(req.query)
+    .then(function(resources) {
+      res.json(resources);
     })
   });
 
 router.route('/popular')
   .get(function(req, res) {
-    ListingsController.getListings(req.query)
-    .then(function(listings) {
-      res.json(listings);
+    ResourcesController.getResources(req.query)
+    .then(function(resources) {
+      res.json(resources);
     })
   });
 
@@ -37,28 +37,28 @@ router.route('/:id')
     if (req.params.id === 'popular') {
 
     }
-    Listings.findOne({
-      _id: req.params.id
+    ResourcesController.getResources(req.query)
+    .then(function(resources) {
+      res.json(resources);
     })
-    .populate('instructor')
-    .exec(function(err, response) {
-      res.json(response);
-    });
   })
   .put(function(req, res) {
-    
+    ResourcesController.updateById(req.params.id)
+    .then(function(resources) {
+      res.json(resources);
+    })
   });
 
 
-router.route('/:id/sessions')
+router.route('/:id/services')
   .get(function(req, res) {
     SessionsController.getSessionsForListing(req.params.id)
-    .then(function(sessions) {
-      res.json(sessions);
+    .then(function(services) {
+      res.json(services);
     })
   })
 
-router.route('/:id/sessions/availability')
+router.route('/:id/services/availability')
   .get(function(req, res) {
     var query = req.query || {};
     query.listingId = req.params.id;

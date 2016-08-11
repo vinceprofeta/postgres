@@ -19,7 +19,8 @@ var conversations = require('./conversations');
 var sessions = require('./sessions');
 var search = require('./search');
 var skills = require('./skills');
-var listings = require('./listings');
+// var listings = require('./listings');
+var resources = require('./resources');
 
 router.use(cors());
 
@@ -28,12 +29,12 @@ router.use('/me', auth, me);
 router.use('/roles', roles);
 router.use('/forgot', forgot);
 router.use('/users', users); 
-router.use('/conversations', conversations); 
-router.use('/chats', chats); 
-router.use('/sessions', sessions);
 router.use('/skills', skills);
 router.use('/search', search);
-router.use('/listings', listings);
+// router.use('/listings', listings);
 
+router.use('/conversations', conversations); 
+router.use('/chats', chats); 
+router.use('/resources', resources);
 
 module.exports = router;

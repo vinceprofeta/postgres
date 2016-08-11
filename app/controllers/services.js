@@ -3,9 +3,9 @@
 var Services //= require('../models/services');
 var Roles //= require('../models/roles');
 var Sessions //= require('../models/sessions');
+
 var BluebirdPromise = require('bluebird');
 var uuid = require('node-uuid');
-var mongoose //= require('mongoose');
 var moment = require('moment');
 var _ = require('lodash');
 

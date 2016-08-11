@@ -14,7 +14,7 @@ var Roles// = require('../../models/roles');
 var Users = require('../../controllers/users');
 var Conversations = require('../../controllers/conversations');
 var Sessions = require('../../controllers/sessions');
-var Listings = require('../../controllers/listings');
+var Listings // = require('../../controllers/listings');
 var Transactions = require('../../controllers/transactions');
 var Favorites = require('../../controllers/favorites');
 
