@@ -13,12 +13,13 @@ var Conversations = require('../../controllers/conversations');
 
 router.route('/')
   .post(function(req, res) {
-    Conversations.add(req.body, function(conversationAdded) {
-      if (conversationAdded.error) {
-        res.status(422)
-      }
+    Conversations.add(req.body)
+    .then(function(conversationAdded) {
       res.json(conversationAdded);
-    });
+    })
+    .catch(function(err) {
+      res.status(422, error)
+    })
   })
   .get(function(req, res) {
     if (_.get(req.query, 'users')) {

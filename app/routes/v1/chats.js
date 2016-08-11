@@ -44,7 +44,7 @@ router.route('/')
 
 router.route('/:id')
   .get(function(req, res) {
-    Chats.find({users: { $in: [req.params.id, req.params.id2]}})
+    Chats.getById(req.params.id)
       .then(function(user) {
         res.json(user);
       })
@@ -57,7 +57,7 @@ router.route('/:id')
       .catch(function(err) {
         res.status(422).json(err);
       });
-  });
+  })
 
 
 module.exports = router;

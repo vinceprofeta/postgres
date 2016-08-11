@@ -8,12 +8,14 @@ var _ = require('lodash');
 
 var bookshelf = require('../../db/bookshelf');
 var Conversations = bookshelf.model('conversations');
+var UsersConversations = bookshelf.model('usersConversations');
+// var Chats = bookshelf.model('chats');
 
 var rooms = {};
 
 rooms.getAll = function(limit, offset) {
   return Conversations.fetchAll({
-    withRelated: ['chats.user'],
+    withRelated: ['chats.user', 'users.user'],
   })
   //   .limit(limit || 10)
   //   .skip(offset || 0)
@@ -22,31 +24,34 @@ rooms.getAll = function(limit, offset) {
 
 rooms.getById = function(id) {
   return Conversations.where('id', id).fetch({
-    withRelated: ['chats.user'],
+    withRelated: ['chats.user', 'users.user'],
   })
-  // return Conversations.findOne({
-  //   _id: id
-  // })
-  // .populate('lastMessage')
-  // .exec(function(err, user) {
-  //   return user;
-  // });
+  // lastMessage
 };
 
-rooms.getByUsersInConversation = function(ids) {
+
+
+// Add Comment Collaps
+
+
+rooms.getByUsersInConversation = function(userIds) {
   return new BluebirdPromise(function(resolve, reject) {
-    ids = JSON.parse(ids);
-    Conversations.where('id', id).fetch({
-      withRelated: [{'chats.user': function(qb) {
-        qb.query.whereIn('id', ids);
-      }}],
-    })
+    var ids = JSON.parse(userIds);
+   
+    bookshelf.knex('usersConversations').select('conversation_id')
+    .whereIn('conversation_user_id', ids)
+    .groupBy('conversation_id').havingRaw('count(*) = ?', [ids.length])
     .then(function(conversation) {
-      if (!conversation) {
-        // return rooms.add({
-        //   userOne: ids[0],
-        //   userTwo: ids[1]
-        // })
+      if (!_.get(conversation, 'length')) {
+        return rooms.add({
+          userOne: ids[0],
+          userTwo: ids[1]
+        })
+        .then(function() {
+          return bookshelf.knex('usersConversations').select('conversation_id')
+          .whereIn('conversation_user_id', ids)
+          .groupBy('conversation_id').havingRaw('count(*) = ?', [ids.length])
+        })
       }
       else {
         resolve(conversation)
@@ -62,37 +67,83 @@ rooms.getByUsersInConversation = function(ids) {
 };
 
 rooms.getConversationsForUser = function(id) {
- 
- // return Conversations.find({
- //    users: {$in: [id]}
- //  }).populate('lastMessage users')
+  return UsersConversations.where('conversation_user_id', id).fetchAll({
+    withRelated: [{'conversation.users.user': function(qb) {
+      // qb.query.whereIn('id', ids);
+      qb.column('id', 'firstName', 'lastName')
+    }}],
+  })
 };
 
 rooms.updateById = function(id, params) {
-  
-  // var updatedObj = {};
-  // var find = {_id: id};
-  // updatedObj.lastMessage = params.lastMessage;
-  // return Conversations.update(find, updatedObj)
-  //   .exec(function(err, updatedObj) {
-  //     if(err) {
-  //       throw err; 
-  //     }else{
-  //       return updatedObj;
-  //     }
-  //   });
+  return bookshelf.knex('conversations')
+  .where('id', '=', id)
+  .update({
+    lastMessage: params.lastMessage
+  })
 };
 
 rooms.add = function(params) {
-  
-  // var conversation = new Conversations({ 
-  //   users: [params.userOne, params.userTwo],
-  //   roomId: params.roomId
-  // });
-
-  // return conversation.save()
+  return new BluebirdPromise(function(resolve, reject) {
+    bookshelf.knex.transaction(function(trx) {
+      bookshelf.knex('conversations').transacting(trx).insert({}).returning('id').then(function(ids) {
+        var conversation = ids[0]
+        var promises = [];
+        promises.push(bookshelf.knex('usersConversations').transacting(trx).insert({
+          conversation_id: conversation,
+          conversation_user_id: Number(params.userOne)
+        }).returning('id'));
+        promises.push(bookshelf.knex('usersConversations').transacting(trx).insert({
+          conversation_id: conversation,
+          conversation_user_id: Number(params.userTwo)
+        }).returning('id'));
+        return BluebirdPromise.all(promises)
+      })
+      .then(trx.commit)
+      .catch(trx.rollback);
+    })
+    .then(function(resp) {
+      resolve({success: true})
+    })
+    .catch(function(err) {
+      reject({error: err})
+    });
+  }); 
 };
 
 
 
 module.exports = rooms;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ // where conversation_id are  ====
+    // conversation_user_id === any of ids
+    // UsersConversations.query(function(qb) {
+    //   qb.whereIn('conversation_user_id', ids)
+    //   // qb.groupBy('conversation_id', ids)
+    // }).fetchAll({
+    //   // withRelated: [{'conversation.users.user': function(qb) {
+    //   //   // qb.query.whereIn('id', ids);
+    //   //   qb.column('id', 'firstName', 'lastName')
+    //   // }}],
+    // })
+    // bookshelf.knex.raw('SELECT * FROM conversations WHERE id IN (SELECT conversation_id FROM "usersConversations" WHERE conversation_user_id IN (' + ids + ') GROUP BY conversation_id HAVING COUNT(*) = '+ids.length+')')
+    // bookshelf.knex.raw('SELECT count(*), conversation_id FROM "usersConversations" WHERE conversation_user_id IN (' + ids + ') GROUP BY conversation_id HAVING COUNT(*) = '+ids.length+'')
+    // bookshelf.knex.raw('SELECT conversation_id, count(*) FROM "usersConversations" WHERE conversation_user_id IN (' + ids + ') GROUP BY conversation_id HAVING COUNT(*) = '+ids.length+'')

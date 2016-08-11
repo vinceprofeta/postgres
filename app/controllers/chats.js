@@ -4,60 +4,50 @@ var Chats// = require('../models/Chats');
 var Roles// = require('../models/roles');
 var _ = require('lodash');
 
+var bookshelf = require('../../db/bookshelf');
+var Chats = bookshelf.model('chats');
+
 var chats = {};
 
 chats.getAll = function(limit, offset) {
-  return Chats.find({})
-    .limit(limit || 10)
-    .skip(offset || 0)
-    .exec(function(err, chats) {
-      return chats;
-    });
+  return Chats.fetchAll({
+    withRelated: [{'user': function(qb) {
+      qb.column('id', 'firstName', 'lastName')
+    }}],
+  })
 };
 
 chats.getById = function(id) {
-  return Chats.findOne({
-    _id: id
+  return Chats.where('id', id).fetch({
+    withRelated: [{'user': function(qb) {
+      qb.column('id', 'firstName', 'lastName')
+    }}],
   })
-  .exec(function(err, user) {
-    return user;
-  });
 };
 
 chats.getChatsInConversation = function(conversationId) {
-  return Chats.find({
-    roomId: conversationId
+  return Chats.where('chat_conversation_id', conversationId).fetchAll({
+     withRelated: [{'user': function(qb) {
+      qb.column('id', 'firstName', 'lastName')
+    }}],
   })
-  .populate('user')
-  .exec(function(err, chats) {
-    return chats;
-  });
 };
 
 chats.updateById = function(id, params) {
   var updatedObj = {};
-  var find = {_id: id};
-
-  return Chats.update(find, updatedObj)
-    .exec(function(err, updatedObj) {
-      if(err) {
-        throw err; 
-      }else{
-        return updatedObj;
-      }
-    });
+  return bookshelf.knex('chats')
+  .where('id', '=', id)
+  .update(updatedObj)
 };
 
 chats.add = function(params) {
-  var chat = new Chats({ 
-    roomId: params.roomId,
+  var chat = { 
+    chat_conversation_id: params.chat_conversation_id,
     log: params.log,
-    user: params.user
-  });
+    chat_user_id: params.chat_user_id
+  };
 
-  return chat.save().then(function() {
-    return chat;
-  });
+  return bookshelf.knex('chats').insert(chat).returning('*')
 };
 
 

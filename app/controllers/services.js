@@ -1,6 +1,6 @@
 'use strict';
 
-var Listings //= require('../models/listings');
+var Services //= require('../models/services');
 var Roles //= require('../models/roles');
 var Sessions //= require('../models/sessions');
 var BluebirdPromise = require('bluebird');
@@ -9,19 +9,19 @@ var mongoose //= require('mongoose');
 var moment = require('moment');
 var _ = require('lodash');
 
-var listings = {};
+var services = {};
 
-listings.getAll = function(limit, offset) {
-  return Listings.find({})
+services.getAll = function(limit, offset) {
+  return Services.find({})
     .limit(limit || 10)
     .skip(offset || 0)
     .populate('instructor skill')
-    .exec(function(err, listings) {
-      return listings;
+    .exec(function(err, services) {
+      return services;
     });
 };
 
-listings.getListings = function(query) {
+services.getServices = function(query) {
   query = query || {}
   var  queryObject = {
     instructor: query.instructor,
@@ -33,17 +33,17 @@ listings.getListings = function(query) {
       $lte: query.endDate
     }
   }
-  return Listings.find(_.pickBy(queryObject, _.identity))
+  return Services.find(_.pickBy(queryObject, _.identity))
     .limit(query.limit || 10)
     .skip(query.offset || 0)
     .populate('instructor skill')
-    .exec(function(err, listings) {
-      return listings;
+    .exec(function(err, services) {
+      return services;
     });
 };
 
-listings.getById = function(id) {
-  return Listings.findOne({
+services.getById = function(id) {
+  return Services.findOne({
     _id: id
   })
   .populate('instructor skill')
@@ -53,12 +53,12 @@ listings.getById = function(id) {
 };
 
 
-listings.updateById = function(id, params) {
+services.updateById = function(id, params) {
   var updatedObj = {};
   var find = {_id: id};
 
   
-  return Listings.update(find, updatedObj)
+  return Services.update(find, updatedObj)
     .exec(function(err, updatedObj) {
       if(err) {
         throw err; 
@@ -69,13 +69,13 @@ listings.updateById = function(id, params) {
 };
 
 
-listings.add = function(session) {
-  var newListing = new Listings(session);
+services.add = function(session) {
+  var newListing = new Services(session);
   return newListing.save()
 };
 
-listings.addSessionsForListing = function(listingId, times) {
-  return listings.getById(listingId)
+services.addSessionsForListing = function(listingId, times) {
+  return services.getById(listingId)
   .then(function(listing) {
     var addedSessions = _.map(times, function(time) {
       return createSession({
@@ -116,4 +116,4 @@ function createSession(obj) {
 
 
 
-module.exports = listings;
+module.exports = services;
