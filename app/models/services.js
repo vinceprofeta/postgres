@@ -7,6 +7,9 @@ module.exports = function(db) {
     hasTimestamps: true,
     resource: function() {
       return this.hasOne('resources', 'id');
+    },
+    skill: function() {
+      return this.hasOne('skills', 'id');
     }
   });
 

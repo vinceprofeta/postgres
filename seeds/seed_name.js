@@ -6,6 +6,7 @@ var user3;
 var user4;
 var conversation;
 var conversation2;
+var skill1;
 exports.seed = function(knex, Promise) {
     return Promise.join(
             knex('services').del(),
@@ -14,8 +15,36 @@ exports.seed = function(knex, Promise) {
             knex('roles').del(),
             knex('usersConversations').del(),
             knex('conversations').del(),
-            knex('chats').del()
+            knex('chats').del(),
+            knex('skills').del()
         )
+
+        // SKILLS
+
+        .then(function(ids) {
+            return Promise.join(
+                knex('skills').insert({
+                  name: 'Basketball',
+                  rank: 1,
+                  description: 'This is a skill to learn basketball'
+                }).returning('id')
+            );
+        })
+        .then(function(ids) {
+            skill1 = ids[0][0];
+            console.log(skill1)
+            return Promise.join(
+                knex('skills').insert({
+                  name: 'Baseball',
+                  rank: 2,
+                  description: 'This is a skill to learn basketball'
+                }).returning('id')
+            );
+        })
+
+
+
+
         // ROLES
         .then(function() {
             return Promise.join(
@@ -131,6 +160,7 @@ exports.seed = function(knex, Promise) {
         })
         .then(function(ids) {
           var resource = ids[0][0];
+          console.log(resource)
             return Promise.join(
                 knex('services').insert({
                     serviceDescription: 'service description',
@@ -141,11 +171,45 @@ exports.seed = function(knex, Promise) {
                     image: 'test',
                     serviceCapacity: 3,
                     serviceDuration: 30,
-                    servicePrice: 60
+                    servicePrice: 60,
+                    service_skill_id: skill1
+                }).returning('id')
+            );
+        })
+        .then(function(ids) {
+          var resource = ids[0][0];
+            return Promise.join(
+                knex('services').insert({
+                    serviceDescription: 'service description',
+                    service_resource_id: resource,
+                    serviceType: 'private',
+                    serviceName: 'Privates',
+                    active: true,
+                    image: 'test',
+                    serviceCapacity: 3,
+                    serviceDuration: 30,
+                    servicePrice: 60,
+                    service_skill_id: skill1
                 }).returning('id')
             );
         })
         
+
+        // ADD CALENDAR SEED
+        .then(function(ids) {
+          var resource = ids[0][0];
+            return Promise.join(
+              knex('calendars').insert({
+                calendar_agent_id: 1,
+                calendar_service_id: 1,
+                calendar_resource_id: 1,
+                calendarCapacity: 3,
+                calendarPrice: 60,
+              }).returning('id')
+          );
+        })
+
+
         .then(function(ids) {
             return Promise.join(
                 knex('conversations').insert({

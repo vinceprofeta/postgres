@@ -7,36 +7,57 @@ var router = express.Router();
 var hasRole = require('../../utils/roleMiddleware');
 
 // Models
-var Skills// = require('../../models/skills');
+var SkillsController = require('../../controllers/skills');
 
 router.route('/')
   .post(function(req, res) {
-    
+    SkillsController.add(req.body)
+    .then(function(skills) {
+      res.json(skills);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   })
   .get(function(req, res) {
-    Skills.find({}, function(err, response) {
-      res.json(response);
-    }).populate('instructor');
+    SkillsController.getAll(req.query)
+    .then(function(skills) {
+      res.json(skills);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   });
 
 router.route('/popular')
   .get(function(req, res) {
-    Skills.find({}, function(err, response) {
-      res.json(response);
-    }).populate('instructor');
+    SkillsController.getPopular(req.query)
+    .then(function(skills) {
+      res.json(skills);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   });
 
 router.route('/:id')
   .get(function(req, res) {
-    Skills.findOne({
-      _id: req.params.id
+    SkillsController.getById(req.params.id)
+    .then(function(skills) {
+      res.json(skills);
     })
-    .exec(function(err, response) {
-      res.json(response);
-    });
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   })
   .put(function(req, res) {
-    
+    SkillsController.updateById(req.params.id, req.body)
+    .then(function(skills) {
+      res.json(skills);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   });
 
 

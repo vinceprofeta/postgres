@@ -1,40 +1,38 @@
 'use strict';
 
-var Favorites// = require('../models/favorites');
-var Roles// = require('../models/roles');
-var Sessions// = require('../models/sessions');
 var BluebirdPromise = require('bluebird');
 var uuid = require('node-uuid');
-var mongoose// = require('mongoose');
 var moment = require('moment');
 var _ = require('lodash');
+
+var bookshelf = require('../../db/bookshelf');
+var Favorites = bookshelf.model('favorites');
 
 var favorites = {};
 
 favorites.getAll = function(queryObject) {
-  return Favorites.find({user: queryObject.user})
-    .limit(queryObject.limit || 10)
-    .skip(queryObject.offset || 0)
-    .populate('listing')
-    .exec(function(err, favorites) {
-      return favorites;
-    });
+  return Favorites.fetchAll({
+    withRelated: ['service', 'user'],
+  })
 };
 
-favorites.add = function(params) {
-  var favorite = new Favorites({ 
-    listing: params.listing,
-    user: params.user
-  });
-
-  return favorite.save(function(err) {
-    if (err) {
-      throw { 'Error': 'Favorite already exists'};
-    }else{
-      return favorite;
-    }
-  });
+favorites.getUsersFavroites = function(userId) {
+  return Favorites.where('user_id', userId).fetch({
+    withRelated: ['service'],
+  })
+  //   .limit(limit || 10)
+  //   .skip(offset || 0)
 };
+
+
+favorites.add = function(userId, service) {
+  var fav = {
+    user_id: userId,
+    favorites_service_id: service.id
+  }
+  return bookshelf.knex('favorites').insert(fav).returning('*')
+};
+
 
 
 module.exports = favorites;

@@ -41,6 +41,7 @@ exports.up = function(knex, Promise) {
       table.timestamps() // updated and created at.
 
       // serviceName needs to be uniqe based on resource 
+      table.integer('service_skill_id').references('skills.id').notNullable(); // REMOVEABLE
     }),
 
     // ________________________________________________________
@@ -80,6 +81,8 @@ exports.up = function(knex, Promise) {
       table.integer('photo_resource_id').references('resources.id');
       table.integer('photo_service_id').references('services.id');
       // index service or resource needs to be.
+
+      table.integer('photo_skill_id').references('skills.id'); // REMOVEABLE
     }),
 
     // ________________________________________________________
@@ -284,6 +287,18 @@ exports.up = function(knex, Promise) {
       table.integer('chat_conversation_id').references('conversations.id').notNullable();
       table.integer('chat_user_id').references('users.id').notNullable();
       table.string('log', 5000).notNullable();
+      table.timestamp('deleted')
+      table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+      table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+    }),
+
+    // ________________________________________________________
+
+    knex.schema.createTable('skills', function(table) {
+      table.increments();
+      table.string('description', 5000).notNullable();
+      table.string('name', 200).notNullable().unique();
+      table.integer('rank').unique();
       table.timestamp('deleted')
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());

@@ -5,8 +5,8 @@ var router = express.Router();
 var jwt = require('jsonwebtoken');
 
 // Models
-var Users// = require('../../models/users');
-var Roles// = require('../../models/roles');
+var bookshelf = require('../../../db/bookshelf');
+var Users = bookshelf.model('users');
 var request = require('request');
 
 // facebookLogin({
@@ -21,12 +21,10 @@ router.route('/')
     if (req.body.facebookToken) {
       facebookLogin(req, res);
     } else {
-      Users.findOne({
-      email: req.body.email
-      }, '+password')
-      .exec(function(err, user) {
-        if (err) throw err; // Change to send error
-
+      return Users.where({
+        email: req.body.email
+      }).fetch({})
+      .then(function(user) {
         if (!user) {
           res.status(401).json({ success: false, message: 'Authentication failed. User not found.' });
         } else if (user) {
@@ -44,16 +42,18 @@ router.route('/')
             }
           });
         }
+      })
+      .catch(function(err) {
+        throw err
       });
     }
   });
 
   function facebookLogin(req, res) {
-    Users.findOne({
+    return Users.where({
       'facebookCredentials.userId': req.body.facebookUser
-    })
-    .exec(function(err, user) {
-      if (err) throw err; // Change to send error
+    }).fetch({})
+    .then(function(err, user) {
       if (!user) {
         res.status(401).json({ success: false, message: 'Authentication failed. User not found.' });
       } else if (user) {
@@ -69,6 +69,9 @@ router.route('/')
         });
    
       }
+    })
+    .catch(function(err) {
+      throw err;
     });
 
   }

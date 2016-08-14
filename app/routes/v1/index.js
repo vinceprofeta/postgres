@@ -21,6 +21,7 @@ var search = require('./search');
 var skills = require('./skills');
 // var listings = require('./listings');
 var resources = require('./resources');
+var services = require('./services');
 
 router.use(cors());
 
@@ -36,5 +37,6 @@ router.use('/search', search);
 router.use('/conversations', conversations); 
 router.use('/chats', chats); 
 router.use('/resources', resources);
+router.use('/services', services);
 
 module.exports = router;

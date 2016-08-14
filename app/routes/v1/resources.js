@@ -10,8 +10,9 @@ var hasRole = require('../../utils/roleMiddleware');
 var Listings// = require('../../models/listings');
 
 // Controllers
-var SessionsController //= require('../../controllers/sessions');
 var ResourcesController = require('../../controllers/resources');
+var ServicesController = require('../../controllers/services');
+var CalendarsController = require('../../controllers/calendars');
 
 router.route('/')
   .post(function(req, res) {
@@ -22,50 +23,148 @@ router.route('/')
     .then(function(resources) {
       res.json(resources);
     })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   });
 
 router.route('/popular')
   .get(function(req, res) {
-    ResourcesController.getResources(req.query)
+    ResourcesController.getPopularResources(req.query)
     .then(function(resources) {
       res.json(resources);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
     })
   });
 
 router.route('/:id')
   .get(function(req, res) {
-    if (req.params.id === 'popular') {
-
-    }
-    ResourcesController.getResources(req.query)
+    ResourcesController.getById(req.params.id)
     .then(function(resources) {
       res.json(resources);
     })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   })
   .put(function(req, res) {
-    ResourcesController.updateById(req.params.id)
+    ResourcesController.updateById(req.params.id, req.body)
     .then(function(resources) {
       res.json(resources);
+    })
+    .catch(function(err) {
+      res.status(422).json({error: err});
     })
   });
 
 
 router.route('/:id/services')
   .get(function(req, res) {
-    SessionsController.getSessionsForListing(req.params.id)
+    ServicesController.getServices({
+      resource: req.params.id
+     })
     .then(function(services) {
       res.json(services);
     })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+  .post(function(req, res) {
+    ServicesController.add({
+      resource: req.params.id,
+      params: req.body
+    })
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
   })
 
-router.route('/:id/services/availability')
+router.route('/:id/services/:serviceId')
   .get(function(req, res) {
-    var query = req.query || {};
-    query.listingId = req.params.id;
-    SessionsController.getAvailability(query).then(function(response) {
-      res.json(response);
+    ServicesController.getById(req.params.serviceId)
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+  .put(function(req, res) {
+    ServicesController.updateById(req.params.serviceId, req.body)
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+
+
+router.route('/:id/services/:serviceId/availability')
+  .get(function(req, res) {
+    // TODO
+    // ServicesController.getById(req.params.serviceId)
+    // .then(function(services) {
+    //   res.json(services);
+    // })
+    // .catch(function(err) {
+    //   res.status(422).json(err);
+    // })
+  })
+
+
+router.route('/:id/services/:serviceId/calendars')
+  .get(function(req, res) {
+    CalendarsController.getCalendars(req.params.serviceId)
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+  .post(function(req, res) {
+    CalendarsController.add({
+      resource: req.params.id,
+      service: req.params.serviceId,
+      agent: req.body.agent,
+      params: req.body
+    })
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
     })
   });
+
+
+router.route('/:id/services/:serviceId/calendars/:calendarId')
+  .get(function(req, res) {
+    CalendarsController.getById(req.params.serviceId)
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+  .put(function(req, res) {
+    CalendarsController.updateById(req.params.serviceId, req.body)
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+
 
 
 module.exports = router;

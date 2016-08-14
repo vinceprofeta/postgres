@@ -7,7 +7,6 @@ var _ = require('lodash');
 var bookshelf = require('../../db/bookshelf');
 var Resources = bookshelf.model('resources');
 // var Roles //= require('../models/roles');
-// var Sessions //= require('../models/sessions');
 
 var resources = {};
 
@@ -44,14 +43,78 @@ resources.getResources = function(query) {
   //   });
 };
 
+resources.getPopularResources = function(query) {
+  return Resources.fetchAll({})
+};
+
 resources.getById = function(id) {
-  return Conversations.where('id', id).fetch({})
+  return Resources.where('id', id).fetch({})
 };
 
 
 resources.updateById = function(id, params) {
   var updatedObj = {};
-  return bookshelf.knex('conversations')
+  if (params.resourceName) {
+    updatedObj.resourceName = params.resourceName;
+  }
+
+  if (params.bookingPercentTake) {
+    updatedObj.bookingPercentTake = params.bookingPercentTake;
+  }
+
+  if (params.bookingFlatFeeTake) {
+    updatedObj.bookingFlatFeeTake = params.bookingFlatFeeTake;
+  }
+
+  if (params.description) {
+    updatedObj.description = params.description;
+  }
+
+  if (params.point) {
+    updatedObj.point = params.point;
+  }
+
+  if (params.cancellationPolicyPercentTake) {
+    updatedObj.cancellationPolicyPercentTake = params.cancellationPolicyPercentTake;
+  }
+
+  if (params.cancellationPolicyFlatFeeTake) {
+    updatedObj.cancellationPolicyFlatFeeTake = params.cancellationPolicyFlatFeeTake;
+  }
+
+  if (params.cancellationPolicyWindow) {
+    updatedObj.cancellationPolicyWindow = params.cancellationPolicyWindow;
+  }
+
+  if (params.streetAddress) {
+    updatedObj.streetAddress = params.streetAddress;
+  }
+
+  if (params.city) {
+    updatedObj.city = params.city;
+  }
+
+  if (params.state) {
+    updatedObj.state = params.state;
+  }
+
+  if (params.zipcode) {
+    updatedObj.zipcode = params.zipcode;
+  }
+
+  if (params.phone) {
+    updatedObj.phone = params.phone;
+  }
+
+  if (params.email) {
+    updatedObj.email = params.email;
+  }
+
+  if (params.website) {
+    updatedObj.website = params.website;
+  }
+
+  return bookshelf.knex('resources')
   .where('id', '=', id)
   .update(updatedObj)
 };
