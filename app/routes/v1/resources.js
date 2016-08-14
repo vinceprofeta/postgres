@@ -167,4 +167,17 @@ router.route('/:id/services/:serviceId/calendars/:calendarId')
 
 
 
+
+  router.route('/:id/agents')
+  .get(function(req, res) {
+    ResourcesController.getAgents(req.params.id, req.query, 'agent')
+    .then(function(services) {
+      res.json(services);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+ 
+
 module.exports = router;

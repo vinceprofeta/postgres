@@ -6,7 +6,8 @@ var _ = require('lodash');
 
 var bookshelf = require('../../db/bookshelf');
 var Resources = bookshelf.model('resources');
-// var Roles //= require('../models/roles');
+var Memberships = bookshelf.model('memberships');
+// var Roles = bookshelf.model('memberships');
 
 var resources = {};
 
@@ -123,6 +124,22 @@ resources.updateById = function(id, params) {
 resources.add = function(resource) {
   return bookshelf.knex('resources').insert(resource).returning('*')
 };
+
+
+resources.getAgents = function(id, query, role) {
+  var queryObject = {
+    membership_resource_id: query.resource,
+    membership_service_id: query.service,
+    membership_role_id: query.role,
+    status: query.status
+  }
+  console.log(role)
+  return bookshelf.knex('roles').select('id')
+  .where('roleName', '=', role)
+
+  // return Memberships.fetchAll(_.pickBy(queryObject, _.identity))
+};
+
 
 
 

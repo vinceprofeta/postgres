@@ -160,7 +160,6 @@ exports.seed = function(knex, Promise) {
         })
         .then(function(ids) {
           var resource = ids[0][0];
-          console.log(resource)
             return Promise.join(
                 knex('services').insert({
                     serviceDescription: 'service description',

@@ -1,5 +1,126 @@
 'use strict';
 var BluebirdPromise = require('bluebird');
+var uuid = require('node-uuid');
+var _ = require('lodash');
+
+var bookshelf = require('../../db/bookshelf');
+var Users = bookshelf.model('users');
+
+var users = {};
+
+users.getAll = function(limit, offset) {
+  return Users.fetchAll({})
+  // .limit(limit || 10)
+  // .skip(offset || 0)
+};
+
+users.getUsers = function(query) {
+  return Users.fetchAll({})
+  // .limit(limit || 10)
+  // .skip(offset || 0)
+};
+
+
+users.getById = function(id) {
+  return Users.where('id', id).fetch({})
+};
+
+
+users.updateById = function(id, params) {
+  var updatedObj = {};
+  if (params.firstName) {
+    updatedObj.firstName = params.firstName;
+  }
+
+  if (params.lastName) {
+    updatedObj.lastName = params.lastName;
+  }
+
+  if (params.email) {
+    updatedObj.email = params.email;
+  }
+
+  if (params.bio) {
+    updatedObj.bio = params.bio;
+  }
+
+  if (params.phone) {
+    updatedObj.phone = params.phone;
+  }
+
+  if (params.password) {
+    updatedObj.password = params.password;
+  }
+
+  if (params.avatar) {
+    updatedObj.avatar = params.avatar;
+  }
+
+  if (params.deleted) {
+    updatedObj.deleted = params.deleted;
+  }
+
+  // if (params.facebookCredentials) {
+  //   updatedObj.facebookCredentials = params.facebookCredentials;
+  // }
+
+  return bookshelf.knex('users')
+  .where('id', '=', id)
+  .update(updatedObj)
+};
+
+
+users.add = function(params) {
+  var user = { 
+    name: {
+      first: params.first,
+      last: params.last
+    },
+    email: params.email,
+    password: params.password,
+    gyms: [{
+      gym: params.gyms
+    }]
+  };
+  return bookshelf.knex('users').insert(user).returning('*')
+};
+
+users.add = function(params) {
+  var user = { 
+    name: {
+      first: params.first,
+      last: params.last
+    },
+    email: params.email,
+    password: params.password,
+    gyms: [{
+      gym: params.gyms
+    }]
+  };
+
+  return user.save(function(err) {
+    if (err) {
+      throw { 'Error': 'User already exists'};
+    }else{
+      return { name: params.name, email: params.email };
+    }
+  });
+};
+
+
+
+module.exports = users;
+
+
+
+
+
+
+
+
+
+'use strict';
+var BluebirdPromise = require('bluebird');
 
 var Users //= require('../models/users');
 var Roles //= require('../models/roles');
