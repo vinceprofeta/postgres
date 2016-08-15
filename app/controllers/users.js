@@ -5,6 +5,7 @@ var _ = require('lodash');
 
 var bookshelf = require('../../db/bookshelf');
 var Users = bookshelf.model('users');
+var Memberships = bookshelf.model('memberships');
 
 var users = {};
 
@@ -77,247 +78,180 @@ users.add = function(params) {
       last: params.last
     },
     email: params.email,
-    password: params.password,
-    gyms: [{
-      gym: params.gyms
-    }]
+    password: params.password
   };
   return bookshelf.knex('users').insert(user).returning('*')
 };
 
-users.add = function(params) {
+
+users.addUserWithMembership = function(params) {
   var user = { 
     name: {
       first: params.first,
       last: params.last
     },
     email: params.email,
-    password: params.password,
-    gyms: [{
-      gym: params.gyms
-    }]
+    password: params.password
   };
 
-  return user.save(function(err) {
-    if (err) {
-      throw { 'Error': 'User already exists'};
-    }else{
-      return { name: params.name, email: params.email };
-    }
-  });
-};
-
-
-
-module.exports = users;
-
-
-
-
-
-
-
-
-
-'use strict';
-var BluebirdPromise = require('bluebird');
-
-var Users //= require('../models/users');
-var Roles //= require('../models/roles');
-var Sessions //= require('../models/sessions');
-
-var users = {};
-
-users.getAll = function(limit, offset) {
-  return Users.find({})
-    .limit(limit || 10)
-    .skip(offset || 0)
-    .exec(function(err, users) {
-      return users;
-    });
-};
-
-users.getById = function(id) {
-  return Users.findOne({
-    _id: id
-  })
-  .populate('gyms')
-  .exec(function(err, user) {
-    return user;
-  });
-};
-
-users.updateById = function(id, params) {
-  try {    
-    var parse = JSON.parse(params.data);
-    params = parse;
-  } catch(err) {
-    console.log(err)
-  }
-
-  var updatedObj = {};
-  var find = {_id: id};
-
-  if (params.facebookCredentials) {
-    updatedObj.facebookCredentials = params.facebookCredentials;
-  }
-  
-  return Users.update(
-    find, updatedObj)
-    .exec(function(err, updatedObj) {      
-      if(err) {
-        throw err; 
-      }else{
-        return updatedObj;
-      }
-    });
-};
-
-users.add = function(params) {
-  var user = new Users({ 
-    name: {
-      first: params.first,
-      last: params.last
-    },
-    email: params.email,
-    password: params.password,
-    gyms: [{
-      gym: params.gyms
-    }]
-  });
-
-  return user.save(function(err) {
-    if (err) {
-      throw { 'Error': 'User already exists'};
-    }else{
-      return { name: params.name, email: params.email };
-    }
-  });
-};
-
-
-users.addSession = function(user, sessionId) {
   return new BluebirdPromise(function(resolve, reject) {
-    Sessions.findOne({
-      _id: sessionId
+    bookshelf.knex.transaction(function(trx) {
+      bookshelf.knex('users').transacting(trx).insert(user).returning('id')
+      .then(function(ids) {
+        var user = ids[0];
+        return users.addMembership(_.merge(params, {user: user}))
+      })
+      .then(trx.commit)
+      .catch(trx.rollback);
     })
-    .then(function(session) {
-      if (session.enrolled.length >= session.capacity) {
-        reject({error: 'Session Full'});
-      } 
-      Sessions.findByIdAndUpdate({_id: session._id}, { $addToSet: { enrolled: user._id } })
-      .exec(function (err) {
-        if(err) {
-          reject(err); 
-        } else {
-          resolve({ 'userId': user._id, 'sessionId': sessionId });
-        }
-      });
-      
+    .then(function(resp) {
+      resolve({success: true})
     })
     .catch(function(err) {
-      reject(err);
+      reject({error: err})
     });
-  });
+  }); 
 };
 
 
 
-users.getBookedInstructorSessions = function(obj) {
-  var startDate = obj.start;
-  var endDate = obj.end;
-  var id = obj.id;
-  var limit = obj.limit;
-  var offset = obj.offset;
-  var showCancelled = obj.showCancelled;
+users.addMembership = function(params) {
+  // check for valid role and add membership
+  return bookshelf.knex('roles').where('roleName', '=', params.role).returning('id')
+  .then(function(role) {
+    role = _.get(role, '[0].id');
+    if (!role) { throw new Error({error: 'role does not exist'})}
+    return bookshelf.knex('memberships').insert({
+      membership_role_id: role,
+      status: params.service ? 'pending_approval' : 'approved',
+      membership_resource_id: Number(params.resource),
+      membership_user_id: Number(params.user),
+      membership_service_id: params.service ? Number(params.service) :  null
+    }).returning('*')
+  }) 
+};
 
-  return Sessions.find({
-    complete: { $exists: false },
-    removed: { $exists: false },
-    dismissed: {
-      $nin: [id]
-    },
-    $and : [
-      {$or: [ 
-        { cancelled: { $exists: false } }, 
-        {$and: [ 
-          { date: { $gte: startDate } }, 
-          { cancelled: { $exists: !!showCancelled } } // mark as true if you want to see cancelled
-        ]} 
-      ]},
-      {$or: [ 
-        { instructor: id }, 
-        { enrolled: { $in: [id] } } 
-      ]}
-    ],
-    $or: [ 
-      { $where: "this.enrolled.length > 0"}, 
-      { private: { $ne: true } } 
-    ],
-    date: {
-      $lte: endDate
-    }
+
+users.getMemberships = function(id) {
+  return Memberships.where('membership_user_id', id).fetchAll({
+    // withRelated: [{'conversation.users.user': function(qb) {
+    //   // qb.query.whereIn('id', ids);
+    //   qb.column('id', 'firstName', 'lastName')
+    // }}],
   })
-  .populate('instructor')
-  .populate('location')
-  .populate('enrolled')
-  .limit(limit || 100)
-  .skip(offset || 0)
-  .sort({date: 1, "dateAndTime" : 1})
-  .exec(function(err, sessions) {
-    return sessions;
-  });
+
 };
 
 
-users.getSessions = function(obj) {
-  var startDate = obj.start;
-  var endDate = obj.end;
-  var id = obj.id;
-  var limit = obj.limit;
-  var offset = obj.offset;
-  var notComplete = obj.notComplete;
-  var query = {
-    enrolled: {
-      $in: [id]
-    },
-    dismissed: {
-      $nin: [id]
-    },
-    removed: { $exists: false }
-  };
-
-  if (startDate && endDate) {
-    query.date = {
-      $gte: startDate,
-      $lte: endDate
-    }
+users.updateMembership = function(params) {
+  var updatedObj = {};
+  if (params.status) {
+    updatedObj.status = params.status;
   }
 
-  if (notComplete) {
-    query.complete = { $exists: false };
-  } 
-
-  return Sessions.find(query)
-    .populate('listing')
-    .limit(limit || 100)
-    .skip(offset || 0)
-    .sort({"dateAndTime" : 1})
-    .exec(function(err, sessions) {
-      return sessions;
-    });
+  return bookshelf.knex('memberships').where('membership_user_id', params.user).update(updatedObj).returning('*')
 };
 
 
 
-users.getPaymentMethod = function(id) {
-  var query = 'paymentMethod name';
-  return Users.findOne({ _id: id }, query)
-    .populate('paymentMethod')
-    .exec(function(err, paymentMethod) {
-      return paymentMethod;
-    });
-};
+
+
+
+// users.getBookedInstructorSessions = function(obj) {
+//   var startDate = obj.start;
+//   var endDate = obj.end;
+//   var id = obj.id;
+//   var limit = obj.limit;
+//   var offset = obj.offset;
+//   var showCancelled = obj.showCancelled;
+
+//   return Sessions.find({
+//     complete: { $exists: false },
+//     removed: { $exists: false },
+//     dismissed: {
+//       $nin: [id]
+//     },
+//     $and : [
+//       {$or: [ 
+//         { cancelled: { $exists: false } }, 
+//         {$and: [ 
+//           { date: { $gte: startDate } }, 
+//           { cancelled: { $exists: !!showCancelled } } // mark as true if you want to see cancelled
+//         ]} 
+//       ]},
+//       {$or: [ 
+//         { instructor: id }, 
+//         { enrolled: { $in: [id] } } 
+//       ]}
+//     ],
+//     $or: [ 
+//       { $where: "this.enrolled.length > 0"}, 
+//       { private: { $ne: true } } 
+//     ],
+//     date: {
+//       $lte: endDate
+//     }
+//   })
+//   .populate('instructor')
+//   .populate('location')
+//   .populate('enrolled')
+//   .limit(limit || 100)
+//   .skip(offset || 0)
+//   .sort({date: 1, "dateAndTime" : 1})
+//   .exec(function(err, sessions) {
+//     return sessions;
+//   });
+// };
+
+
+// users.getSessions = function(obj) {
+//   var startDate = obj.start;
+//   var endDate = obj.end;
+//   var id = obj.id;
+//   var limit = obj.limit;
+//   var offset = obj.offset;
+//   var notComplete = obj.notComplete;
+//   var query = {
+//     enrolled: {
+//       $in: [id]
+//     },
+//     dismissed: {
+//       $nin: [id]
+//     },
+//     removed: { $exists: false }
+//   };
+
+//   if (startDate && endDate) {
+//     query.date = {
+//       $gte: startDate,
+//       $lte: endDate
+//     }
+//   }
+
+//   if (notComplete) {
+//     query.complete = { $exists: false };
+//   } 
+
+//   return Sessions.find(query)
+//     .populate('listing')
+//     .limit(limit || 100)
+//     .skip(offset || 0)
+//     .sort({"dateAndTime" : 1})
+//     .exec(function(err, sessions) {
+//       return sessions;
+//     });
+// };
+
+
+
+// users.getPaymentMethod = function(id) {
+//   var query = 'paymentMethod name';
+//   return Users.findOne({ _id: id }, query)
+//     .populate('paymentMethod')
+//     .exec(function(err, paymentMethod) {
+//       return paymentMethod;
+//     });
+// };
 
 
 

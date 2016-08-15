@@ -7,6 +7,7 @@ var _ = require('lodash');
 var bookshelf = require('../../db/bookshelf');
 var Resources = bookshelf.model('resources');
 var Memberships = bookshelf.model('memberships');
+var Users = bookshelf.model('users');
 // var Roles = bookshelf.model('memberships');
 
 var resources = {};
@@ -51,6 +52,21 @@ resources.getPopularResources = function(query) {
 resources.getById = function(id) {
   return Resources.where('id', id).fetch({})
 };
+
+resources.updateAppFees = function(id, params) {
+  var updatedObj = {};
+  if (params.appFeePercentageTake) {
+    updatedObj.appFeePercentageTake = params.appFeePercentageTake;
+  }
+
+  if (params.appFeeFlatFeeTake) {
+    updatedObj.appFeeFlatFeeTake = params.appFeeFlatFeeTake;
+  }
+
+  return bookshelf.knex('resources')
+  .where('id', '=', id)
+  .update(updatedObj)
+}
 
 
 resources.updateById = function(id, params) {
@@ -126,18 +142,29 @@ resources.add = function(resource) {
 };
 
 
-resources.getAgents = function(id, query, role) {
+resources.getMembers = function(id, query, role) {
   var queryObject = {
     membership_resource_id: query.resource,
     membership_service_id: query.service,
-    membership_role_id: query.role,
     status: query.status
   }
-  console.log(role)
-  return bookshelf.knex('roles').select('id')
-  .where('roleName', '=', role)
-
-  // return Memberships.fetchAll(_.pickBy(queryObject, _.identity))
+  return bookshelf.knex('roles')
+  .where('roleName', '=', role).then(function(role) {
+    var role = _.get(role, '[0].id');
+    queryObject.membership_role_id = role;
+    return Memberships.where(_.pickBy(queryObject, _.identity)).fetchAll({
+      withRelated: [
+        {'user': function(qb) {
+          qb.column('id', 'firstName', 'lastName')
+        }},
+        {'role': function(qb) {
+          qb.column('id', 'roleName')
+        }}
+      ],
+    }).catch(function(err) {
+      console.log(err)
+    })
+  });
 };
 
 

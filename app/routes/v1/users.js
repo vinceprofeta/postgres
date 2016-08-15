@@ -45,4 +45,23 @@ router.route('/:id')
   });
 
 
+router.route('/:id/memberships')
+  .get(function(req, res) {
+    Users.getMemberships(req.params.id)
+      .then(function(user) {
+        res.json(user);
+      });
+  })
+  .post(function(req, res) {
+    var membership = _.merge(req.body, {user: req.params.id})
+    Users.addMembership(membership)
+      .then(function(user) {
+        res.json(user);
+      })
+      .catch(function(err) {
+        res.status(422).json(err);
+      });
+  });
+
+
 module.exports = router;

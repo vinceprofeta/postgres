@@ -19,8 +19,18 @@ bookings.getAll = function(limit, offset) {
 bookings.getBookings = function(query) {
   query = query || {}
   var  queryObject = {
-    skill: query.skill,
-    service_resource_id: query.resource,
+    bookings_resource_id: query.resource,
+    bookings_agent_id: query.agent,
+    bookings_service_id: query.service,
+    bookingDuration: query.duration,
+    bookingCapacity: query.capacity,
+    bookingPrice: query.price,
+    bookingStatus: query.status,
+
+    // TODO BEFORE AND AFTER QUERIES
+    bookingDate: query.date,
+    bookingStart: query.start,
+    bookingEnd: query.end,
   };
 
   return Bookings.where(_.pickBy(queryObject, _.identity)).fetchAll({
@@ -56,10 +66,8 @@ bookings.add = function(data) {
     bookingPrice: '',
     bookingStatus: '',
     notes: '',
-
   };
 
-  booking = _.merge(booking, {booking_resource_id: id})
   return bookshelf.knex('bookings').insert(booking).returning('*')
 };
 
@@ -67,14 +75,6 @@ bookings.add = function(data) {
 
 
 bookings.updateById = function(id, params) {
-  bookingDate: '',
-    bookingStart: '',
-    bookingEnd: '',
-    bookingDuration: '',
-    bookingCapacity: '',
-    bookingPrice: '',
-    bookingStatus: '',
-    notes: '',
   var updatedObj = {};
 
   if (params.bookingDate) {
@@ -122,50 +122,6 @@ bookings.updateById = function(id, params) {
   .where('id', '=', id)
   .update(updatedObj)
 };
-
-
-
-
-
-
-// bookings.addSessionsForListing = function(listingId, times) {
-//   return bookings.getById(listingId)
-//   .then(function(listing) {
-//     var addedSessions = _.map(times, function(time) {
-//       return createSession({
-//         times: time,
-//         listing: listing
-//       })
-//     });
-//     console.log(addedSessions)
-//     return Sessions.create(addedSessions, function (err, addedSession) {
-//       if (err) { throw err }
-//       return addedSession;
-//     });
-//   })
-//   .catch(function() {
-//     throw new Error({error: 'listing not found', code: 404})
-//   })
-// };
-
-
-// function createSession(obj) {
-//   listing = listing || {};
-//   var times = _.get(obj, 'times', {})
-//   var listing = _.get(obj, 'listing', {})
-  
-//   return new Sessions({
-//     notes: '',
-//     dateAndTime: times.dateAndTime,
-//     date:  times.date,
-//     time: {
-//     start: times.time,
-//     end: moment(times.time, 'H:mm').add(listing.duration || 30, 'minutes').format('H:mm')
-//     },      
-//     enrolled: [],
-//     listing: listing._id
-//   });
-// }
 
 
 

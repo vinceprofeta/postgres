@@ -98,6 +98,7 @@ exports.up = function(knex, Promise) {
       table.integer('membership_service_id').references('services.id')
       table.integer('membership_role_id').references('roles.id').notNullable();
       table.integer('membership_user_id').references('users.id').notNullable();
+      table.unique(['membership_user_id', 'membership_role_id', 'membership_resource_id', 'membership_service_id'])
     }),
 
     // ________________________________________________________

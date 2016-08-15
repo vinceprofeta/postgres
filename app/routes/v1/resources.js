@@ -1,6 +1,7 @@
 'use strict';
 
 var express = require('express');
+var _ = require('lodash');
 var router = express.Router();
 
 // Utils
@@ -13,6 +14,7 @@ var Listings// = require('../../models/listings');
 var ResourcesController = require('../../controllers/resources');
 var ServicesController = require('../../controllers/services');
 var CalendarsController = require('../../controllers/calendars');
+var UsersController = require('../../controllers/users');
 
 router.route('/')
   .post(function(req, res) {
@@ -56,6 +58,17 @@ router.route('/:id')
     })
     .catch(function(err) {
       res.status(422).json({error: err});
+    })
+  });
+
+router.route('/:id/app-fees')
+  .put(function(req, res) {
+    ResourcesController.updateAppFees(req.params.id, req.params)
+    .then(function(resources) {
+      res.json(resources);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
     })
   });
 
@@ -170,9 +183,75 @@ router.route('/:id/services/:serviceId/calendars/:calendarId')
 
   router.route('/:id/agents')
   .get(function(req, res) {
-    ResourcesController.getAgents(req.params.id, req.query, 'agent')
-    .then(function(services) {
-      res.json(services);
+    ResourcesController.getMembers(req.params.id, req.query, 'agent')
+    .then(function(agents) {
+      res.json(agents);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+
+  router.route('/:id/agents/pending')
+  .get(function(req, res) {
+    var query = req.query || {}
+    query.status = 'pending_approval'
+    ResourcesController.getMembers(req.params.id, query, 'agent')
+    .then(function(agents) {
+      res.json(agents);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+
+  router.route('/:id/agents/:agentId')
+  .get(function(req, res) {
+    UsersController.getById(req.params.agentId)
+    .then(function(agents) {
+      res.json(agents);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+  .put(function(req, res) {
+    UsersController.updateMembership(_.merge(req.body, {resource: req.params.id, user: req.params.agentId}))
+    .then(function(agents) {
+      res.json(agents);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+
+
+  router.route('/:id/clients')
+  .get(function(req, res) {
+    ResourcesController.getMembers(req.params.id, req.query, 'user')
+    .then(function(clients) {
+      res.json(clients);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+
+
+  router.route('/:id/clients/:clientId')
+  .get(function(req, res) {
+    UsersController.getById(req.params.clientId)
+    .then(function(clients) {
+      res.json(clients);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+  .put(function(req, res) {
+    UsersController.updateMembership(req.params.id, req.params.clientId, req.body)
+    .then(function(clients) {
+      res.json(clients);
     })
     .catch(function(err) {
       res.status(422).json(err);

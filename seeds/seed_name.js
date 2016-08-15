@@ -70,7 +70,7 @@ exports.seed = function(knex, Promise) {
         .then(function() {
             return Promise.join(
                 knex('roles').insert({
-                  roleName: 'app-owner'
+           x       roleName: 'app-owner'
                 }).returning('id')
             );
         })

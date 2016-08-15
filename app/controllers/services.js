@@ -27,7 +27,7 @@ services.getServices = function(query) {
   };
 
   return Services.where(_.pickBy(queryObject, _.identity)).fetchAll({
-    // withRelated: ['resource', 'skill'],
+    withRelated: ['resource', 'skill'],
   })
   // .limit(query.limit || 10)
   // .skip(query.offset || 0)

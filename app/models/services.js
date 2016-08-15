@@ -6,10 +6,10 @@ module.exports = function(db) {
     tableName: 'services',
     hasTimestamps: true,
     resource: function() {
-      return this.hasOne('resources', 'id');
+      return this.belongsTo('resources', 'service_resource_id');
     },
     skill: function() {
-      return this.hasOne('skills', 'id');
+      return this.belongsTo('skills', 'service_skill_id');
     }
   });
 

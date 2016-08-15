@@ -39,7 +39,9 @@ exports.up = function(knex, Promise) {
       table.integer('servicePrice').notNullable();
       table.timestamp('deleted')
       table.specificType('point', 'geometry(point, 4326)')
-      table.timestamps() // updated and created at.
+      
+      table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+      table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
       // serviceName needs to be uniqe based on resource 
       table.integer('service_skill_id').references('skills.id').notNullable(); // REMOVEABLE
@@ -98,6 +100,11 @@ exports.up = function(knex, Promise) {
       table.integer('membership_service_id').references('services.id')
       table.integer('membership_role_id').references('roles.id').notNullable();
       table.integer('membership_user_id').references('users.id').notNullable();
+      // table.unique(['membership_user_id', 'membership_role_id', 'membership_resource_id', 'membership_service_id'])
+      // Status types
+        // pending_approval
+        // approved
+        // blocked
     }),
 
     // ________________________________________________________

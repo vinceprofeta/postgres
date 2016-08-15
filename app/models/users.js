@@ -6,6 +6,9 @@ module.exports = function(db) {
     // hidden: ['password'],
     verifyPassword: function(password) {
       return this.get('password') === password;
+    },
+    memberships: function() {
+      return this.hasMany('memberships', 'membership_user_id');
     }
   });
 
