@@ -13,12 +13,13 @@ var Users = require('../../controllers/users');
 
 router.route('/')
   .post(function(req, res) {
-    Users.add(req.body, function(userAdded) {
-      if (userAdded.error) {
-        res.status(422)
-      }
+    Users.add(req.body)
+    .then(function(userAdded) {
       res.json(userAdded);
-    });
+    })
+    .catch(function(err) {
+      res.status(422).json(err)
+    })
   })
   .get(function(req, res) {
     Users.getAll(req.query.limit, req.query.offset)

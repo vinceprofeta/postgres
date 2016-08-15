@@ -53,7 +53,7 @@ exports.up = function(knex, Promise) {
       table.increments();
       table.string('firstName').notNullable()
       table.string('lastName').notNullable()
-      table.string('email').notNullable()
+      table.string('email').notNullable().unqiue();
       table.string('bio')
       table.string('phone')
       table.string('password').notNullable()

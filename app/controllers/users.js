@@ -73,23 +73,19 @@ users.updateById = function(id, params) {
 
 users.add = function(params) {
   var user = { 
-    name: {
-      first: params.first,
-      last: params.last
-    },
+    firstName: params.first,
+    lastName: params.last,
     email: params.email,
     password: params.password
   };
-  return bookshelf.knex('users').insert(user).returning('*')
+  return new Users(user).save()
 };
 
 
 users.addUserWithMembership = function(params) {
   var user = { 
-    name: {
-      first: params.first,
-      last: params.last
-    },
+    firstName: params.first,
+    lastName: params.last,
     email: params.email,
     password: params.password
   };

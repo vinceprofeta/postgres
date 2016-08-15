@@ -10,6 +10,8 @@ var routes = require('./app/routes/v1');
 require('dotenv').config();
 
 var app = express();
+// Token Variable
+app.set('superSecret', process.env.TOKEN_VARIABLE); // secret variable // Make env later
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
