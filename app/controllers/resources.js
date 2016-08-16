@@ -168,6 +168,61 @@ resources.getMembers = function(id, query, role) {
 };
 
 
+resources.addWithServiceMembershipCalendar = function(user, resource, service) {
+  return new BluebirdPromise(function(resolve, reject) {
+    bookshelf.knex.transaction(function(trx) {
+      
+      bookshelf.knex('resources').transacting(trx).insert(resource).returning('id')
+      .then(function(resourceAdded) {
+        resourceAdded = _.get(resourceAdded, '[0]');
+
+        return bookshelf.knex('skills').transacting(trx).where('id', '=', service.service_skill_id)
+        .then(function(skill) {
+          
+          service.service_resource_id = resourceAdded;
+          service.service_skill_id = _.get(skill, '[0].id');
+          return bookshelf.knex('services').transacting(trx).insert(service).returning('id')
+          .then(function(serviceAdded) {
+            serviceAdded = _.get(serviceAdded, '[0]');
+
+            return bookshelf.knex('roles').transacting(trx).where('roleName', '=', 'resource-admin').returning('id')
+            .then(function(role) {
+              role = _.get(role, '[0].id');
+              if (!role) { throw new Error({error: 'role does not exist'})}
+              return bookshelf.knex('memberships').transacting(trx).insert({
+                membership_role_id: role,
+                status: 'approved',
+                membership_resource_id: Number(resourceAdded),
+                membership_user_id: Number(user),
+                membership_service_id: serviceAdded
+              }).returning('*')
+            });
+
+          });
+        });
+      })
+
+
+
+
+      .then(trx.commit)
+      .catch(trx.rollback);
+    })
+    .then(function(resp) {
+      resolve({success: true})
+    })
+    .catch(function(err) {
+      // console.log(err)
+      reject({error: err})
+    });
+  }); 
+
+  return bookshelf.knex('resources').insert(resource).returning('*')
+};
+
+
+
+
 
 
 module.exports = resources;

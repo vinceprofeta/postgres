@@ -22,7 +22,7 @@ var ioListeners = {
 
       socket.on('message', function(message){
         chats.add({ 
-          roomId: message.roomId,
+          conversation: message.roomId,
           log: message.log,
           user: message.user
         }).then(function(chat) {

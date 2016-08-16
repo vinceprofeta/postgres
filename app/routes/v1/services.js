@@ -3,11 +3,15 @@
 var express = require('express');
 var router = express.Router();
 
+var knex = require('../../../db/knex');
+var st = require('knex-postgis')(knex);
+
 // Utils
 var hasRole = require('../../utils/roleMiddleware');
 
 // Controllers
 var ServicesController = require('../../controllers/services');
+var ResourcesController = require('../../controllers/resources');
 
 router.route('/')
   .post(function(req, res) {
@@ -77,6 +81,52 @@ router.route('/:id/services/availability')
       res.status(422).json(err);
     })
   });
+
+
+
+router.route('/enroll')
+  .post(function(req, res) {
+    
+    ResourcesController.addWithServiceMembershipCalendar(1, resource, service).then(function(response) {
+      res.json(response);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  });
+
+  var resource = {
+  resourceName: 'NEW HIP SPOT',
+  appFeePercentageTake:  0,
+  appFeeFlatFeeTake: 0,
+  bookingPercentTake: 0,
+  bookingFlatFeeTake: 0,
+  description: 'This is a sample',
+  point: st.geomFromText('Point(-86.681290 41.505493)', 4326),
+  cancellationPolicyPercentTake: 0,
+  cancellationPolicyFlatFeeTake: 0,
+  cancellationPolicyWindow: 24,
+  streetAddress: '901 red river',
+  city: 'Cleveland',
+  state: 'OH',
+  zipcode: 44094,
+  phone: '440-444-4444',
+  email: 'vprofeta12@gmail.com',
+  website: 'www.google.com',
+}
+
+var service = {
+  serviceDescription: 'service description',
+  // service_resource_id: resource,
+  serviceType: 'private',
+  serviceName: 'Privates',
+  active: true,
+  image: 'test',
+  serviceCapacity: 3,
+  serviceDuration: 30,
+  servicePrice: 60,
+  service_skill_id: 1
+}
 
 
 module.exports = router;

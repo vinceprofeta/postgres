@@ -48,6 +48,7 @@ services.getById = function(id) {
 };
 
 
+// TODO
 services.add = function(data) {
   var id = data.resource;
   var params = data.params;
@@ -65,8 +66,6 @@ services.add = function(data) {
   service = _.merge(service, {service_resource_id: id})
   return bookshelf.knex('services').insert(service).returning('*')
 };
-
-
 
 
 services.updateById = function(id, params) {

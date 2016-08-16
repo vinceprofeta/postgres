@@ -42,9 +42,9 @@ chats.updateById = function(id, params) {
 
 chats.add = function(params) {
   var chat = { 
-    chat_conversation_id: params.chat_conversation_id,
+    chat_conversation_id: params.conversation,
     log: params.log,
-    chat_user_id: params.chat_user_id
+    chat_user_id: params.user
   };
 
   return bookshelf.knex('chats').insert(chat).returning('*')

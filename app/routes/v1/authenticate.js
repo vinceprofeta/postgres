@@ -47,7 +47,7 @@ router.route('/')
             if(err || !isMatch) {
               res.status(401).json({ success: false, message: 'Authentication failed. Wrong password.' });
             }else{
-              var token = jwt.sign({ _id: user.user.id, user: user.user, memberships: user.memberships }, req.app.get('superSecret'), {
+              var token = jwt.sign({ id: user.user.attributes.id, user: user.user.attributes, memberships: user.memberships }, req.app.get('superSecret'), {
                 expiresIn: 2592000 // expires in 24 hours
               });
 
