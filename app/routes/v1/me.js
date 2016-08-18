@@ -20,13 +20,13 @@ var Favorites = require('../../controllers/favorites');
 
 router.route('/')
   .get(function(req, res) {
+    // console.log(req.decoded)
     Users
-      .getById(req.decoded._id, 'populateAll') // when getting me we want to populate everything
+      .getById(req.decoded._id) // when getting me we want to populate everything
       .then(function(user) {
         if (!user) {
           res.status(404).json({error: 'no user found'});
         }
-
         res.json(user);
       })
       .catch(function(err) {
@@ -60,7 +60,8 @@ router.route('/')
     Conversations
       .getConversationsForUser(req.decoded._id)
       .then(function(conversations) {
-        if (!conversations) {
+        console.log(conversations.toJSON())
+        if (!_.get(conversations, 'length')) {
           res.status(404).json({error: 'no conversations found'});
         }
         res.json(conversations);

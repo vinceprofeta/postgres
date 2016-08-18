@@ -12,6 +12,7 @@ var hasRole = require('../../utils/roleMiddleware');
 // Controllers
 var ServicesController = require('../../controllers/services');
 var ResourcesController = require('../../controllers/resources');
+var CalendarsController = require('../../controllers/calendars');
 
 router.route('/')
   .post(function(req, res) {
@@ -19,6 +20,17 @@ router.route('/')
   })
   .get(function(req, res) {
     ServicesController.getServices(req.query)
+    .then(function(resources) {
+      res.json(resources);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  });
+
+router.route('/calendars')
+  .get(function(req, res) {
+    CalendarsController.getCalendarsBySkill(req.query)
     .then(function(resources) {
       res.json(resources);
     })

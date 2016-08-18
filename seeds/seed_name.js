@@ -24,9 +24,10 @@ exports.seed = function(knex, Promise) {
         .then(function(ids) {
             return Promise.join(
                 knex('skills').insert({
-                  name: 'Basketball',
+                  name: 'Soccer',
                   rank: 1,
-                  description: 'This is a skill to learn basketball'
+                  description: 'soccer drills desc',
+                  image: 'https://images.unsplash.com/photo-1451256656121-9ffc0c898a49?crop=entropy&fit=crop&fm=jpg&h=275&ixjsv=2.1.0&ixlib=rb-0.3.5&q=80&w=400',
                 }).returning('id')
             );
         })
@@ -35,9 +36,20 @@ exports.seed = function(knex, Promise) {
             console.log(skill1)
             return Promise.join(
                 knex('skills').insert({
-                  name: 'Baseball',
+                  name: 'Science',
                   rank: 2,
-                  description: 'This is a skill to learn basketball'
+                  image: 'https://images.unsplash.com/photo-1453733190371-0a9bedd82893?crop=entropy&fit=crop&fm=jpg&ixjsv=2.1.0&ixlib=rb-0.3.5&q=80&w=400',
+                  description: 'Science problems'
+                }).returning('id')
+            );
+        })
+        .then(function(ids) {
+            return Promise.join(
+                knex('skills').insert({
+                  name: 'Guitar',
+                  rank: 3,
+                  image: 'https://images.unsplash.com/photo-1459305272254-33a7d593a851?crop=entropy&fit=crop&fm=jpg&h=275&ixjsv=2.1.0&ixlib=rb-0.3.5&q=80&w=400',
+                  description: 'Guitar drills'
                 }).returning('id')
             );
         })
@@ -70,7 +82,7 @@ exports.seed = function(knex, Promise) {
         .then(function() {
             return Promise.join(
                 knex('roles').insert({
-           x       roleName: 'app-owner'
+                  roleName: 'app-owner'
                 }).returning('id')
             );
         })

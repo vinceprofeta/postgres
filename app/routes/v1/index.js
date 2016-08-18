@@ -19,7 +19,7 @@ var conversations = require('./conversations');
 var sessions = require('./sessions');
 var search = require('./search');
 var skills = require('./skills');
-// var listings = require('./listings');
+var calendars = require('./calendars');
 var resources = require('./resources');
 var services = require('./services');
 
@@ -32,7 +32,7 @@ router.use('/forgot', forgot);
 router.use('/users', users); 
 router.use('/skills', skills);
 router.use('/search', search);
-// router.use('/listings', listings);
+router.use('/calendars', calendars);
 
 router.use('/conversations', conversations); 
 router.use('/chats', chats); 

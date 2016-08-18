@@ -6,13 +6,13 @@ module.exports = function(db) {
     tableName: 'calendars',
     hasTimestamps: true,
     resource: function() {
-      return this.hasOne('resources', 'id');
+      return this.belongsTo('resources', 'calendar_resource_id');
     },
     service: function() {
-      return this.hasOne('services', 'id');
+      return this.belongsTo('services', 'calendar_service_id');
     },
     agent: function() {
-      return this.hasOne('users', 'id');
+      return this.belongsTo('users', 'calendar_agent_id');
     }
   });
 

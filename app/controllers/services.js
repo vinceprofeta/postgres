@@ -22,8 +22,8 @@ services.getAll = function(limit, offset) {
 services.getServices = function(query) {
   query = query || {}
   var  queryObject = {
-    skill: query.skill,
-    service_resource_id: query.resource,
+    service_skill_id: query.skill,
+    service_resource_id: query.resource
   };
 
   return Services.where(_.pickBy(queryObject, _.identity)).fetchAll({
@@ -34,6 +34,8 @@ services.getServices = function(query) {
   // .populate('instructor skill')
 
 };
+
+
 
 
 services.getPopularServices = function(query) {

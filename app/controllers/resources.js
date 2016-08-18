@@ -194,8 +194,19 @@ resources.addWithServiceMembershipCalendar = function(user, resource, service) {
                 status: 'approved',
                 membership_resource_id: Number(resourceAdded),
                 membership_user_id: Number(user),
-                membership_service_id: serviceAdded
+                membership_service_id: Number(serviceAdded)
               }).returning('*')
+              .then(function(membership) {
+                var calendar = {
+                  calendar_agent_id: Number(user), 
+                  calendar_service_id: Number(serviceAdded), 
+                  calendar_resource_id: Number(resourceAdded),
+                  point: resource.point,
+                  calendarCapacity: 1, //REMOVEABLE
+                  calendarPrice: 100 // REMOVEABLE
+                }
+                return bookshelf.knex('calendars').transacting(trx).insert(calendar).returning('*')
+              })
             });
 
           });

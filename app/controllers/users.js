@@ -61,6 +61,10 @@ users.updateById = function(id, params) {
     updatedObj.deleted = params.deleted;
   }
 
+  if (params.facebookCredentials) {
+    updatedObj.facebookCredentials = params.facebookCredentials;
+  }
+
   // if (params.facebookCredentials) {
   //   updatedObj.facebookCredentials = params.facebookCredentials;
   // }
@@ -76,7 +80,9 @@ users.add = function(params) {
     firstName: params.first,
     lastName: params.last,
     email: params.email,
-    password: params.password
+    password: params.password,
+    facebookUserId: params.facebookUserId || null,
+    facebookCredentials: params.facebookCredentials || {}
   };
   return new Users(user).save()
 };
@@ -108,35 +114,6 @@ users.addUserWithMembership = function(params) {
     });
   }); 
 };
-
-
-users.addUserWithMembershipAndResource = function(params) {
-  var user = { 
-    firstName: params.first,
-    lastName: params.last,
-    email: params.email,
-    password: params.password
-  };
-
-  return new BluebirdPromise(function(resolve, reject) {
-    bookshelf.knex.transaction(function(trx) {
-      bookshelf.knex('users').transacting(trx).insert(user).returning('id')
-      .then(function(ids) {
-        var user = ids[0];
-        return users.addMembership(_.merge(params, {user: user}))
-      })
-      .then(trx.commit)
-      .catch(trx.rollback);
-    })
-    .then(function(resp) {
-      resolve({success: true})
-    })
-    .catch(function(err) {
-      reject({error: err})
-    });
-  }); 
-};
-
 
 
 users.addMembership = function(params) {

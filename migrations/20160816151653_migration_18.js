@@ -54,7 +54,7 @@ exports.up = function(knex, Promise) {
       table.increments();
       table.string('firstName').notNullable()
       table.string('lastName').notNullable()
-      table.string('email').notNullable().unqiue();
+      table.string('email').notNullable().unique();
       table.string('bio')
       table.string('phone')
       table.string('password').notNullable()
@@ -311,6 +311,7 @@ exports.up = function(knex, Promise) {
       table.increments();
       table.string('description', 5000).notNullable();
       table.string('name', 200).notNullable().unique();
+      table.string('image', 500).notNullable()
       table.integer('rank').unique();
       table.timestamp('deleted')
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());

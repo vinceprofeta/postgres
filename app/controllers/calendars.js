@@ -5,6 +5,7 @@ var _ = require('lodash');
 
 var bookshelf = require('../../db/bookshelf');
 var Calendars = bookshelf.model('calendars');
+var Services = bookshelf.model('services');
 // var Roles //= require('../models/roles');
 
 var calendars = {};
@@ -24,6 +25,28 @@ calendars.getCalendars = function(query) {
   return Calendars.where(_.pickBy(queryObject, _.identity)).fetchAll({
     withRelated: ['agent'], //'resource', 'service'
   })
+  // .limit(query.limit || 10)
+  // .skip(query.offset || 0)
+  // .populate('instructor skill')
+
+};
+
+calendars.getCalendarsBySkill = function(query) {
+  // query = query || {}
+  // var  queryObject = {
+  //   calendar_resource_id: query.resource,
+  //   calendar_agent_id: query.agent,
+  //   calendar_service_id: query.service
+  // };
+  return bookshelf.knex('services')
+  .where('service_skill_id',  Number(query.skill))
+  .join('calendars', 'services.id', '=', 'calendars.calendar_service_id')
+  // .select('calendars.calendar_agent_id')
+  .join('users', 'calendars.calendar_agent_id', '=', 'users.id')
+  .select('calendars.calendarPrice', 'calendars.calendar_agent_id', 'users.facebookUserId', 'users.firstName', 'users.lastName', 'services.serviceName', 'services.servicePrice', 'services.id', 'calendars.id as calendarId')
+  // Calendars.where(_.pickBy(queryObject, _.identity)).fetchAll({
+  //   withRelated: ['agent'], //'resource', 'service'
+  // })
   // .limit(query.limit || 10)
   // .skip(query.offset || 0)
   // .populate('instructor skill')
@@ -50,8 +73,8 @@ calendars.add = function(data) {
   var params = data.params;
   // resource id - GET reource
   var calendar = {   
-    calendarCapacity: 3,
-    calendarPrice: 60,
+    calendarCapacity: 1,
+    calendarPrice: 0,
     // point
   };
   calendar = _.merge(calendar, {

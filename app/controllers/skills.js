@@ -14,11 +14,11 @@ skills.getAll = function(limit, offset) {
 };
 
 skills.getPopular = function(id) {
-  return Skills.where('rank', 1).fetch({})
+  return Skills.fetchAll({}) //Skills.where('rank', 1).fetchAll({})
 };
 
 skills.getById = function(id) {
-  return Skills.where('id', id).fetch({})
+  return Skills.where('id', id).fetchAll({})
 };
 
 skills.updateById = function(id, params) {
