@@ -8,6 +8,8 @@ var bookshelf = require('../../db/bookshelf');
 var Resources = bookshelf.model('resources');
 var Memberships = bookshelf.model('memberships');
 var Users = bookshelf.model('users');
+var Calendars = bookshelf.model('calendars');
+var Services = bookshelf.model('services');
 // var Roles = bookshelf.model('memberships');
 
 var resources = {};
@@ -181,9 +183,10 @@ resources.addWithServiceMembershipCalendar = function(user, resource, service) {
           
           service.service_resource_id = resourceAdded;
           service.service_skill_id = _.get(skill, '[0].id');
-          return bookshelf.knex('services').transacting(trx).insert(service).returning('id')
-          .then(function(serviceAdded) {
-            serviceAdded = _.get(serviceAdded, '[0]');
+
+          return new Services(service).save(null, {transacting: trx})
+          .then(function(serviceAdded) { 
+            serviceAdded = _.get(serviceAdded, 'attributes.id');
 
             return bookshelf.knex('roles').transacting(trx).where('roleName', '=', 'resource-admin').returning('id')
             .then(function(role) {
@@ -204,8 +207,8 @@ resources.addWithServiceMembershipCalendar = function(user, resource, service) {
                   point: resource.point,
                   calendarCapacity: 1, //REMOVEABLE
                   calendarPrice: 100 // REMOVEABLE
-                }
-                return bookshelf.knex('calendars').transacting(trx).insert(calendar).returning('*')
+                } 
+                return new Calendars(calendar).save(null, {transacting: trx});
               })
             });
 

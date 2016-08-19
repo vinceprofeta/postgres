@@ -318,7 +318,7 @@ exports.up = function(knex, Promise) {
       table.timestamp('deleted')
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
-    }),
+    })
 
 
 

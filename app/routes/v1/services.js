@@ -103,22 +103,23 @@ router.route('/enroll')
       res.json(response);
     })
     .catch(function(err) {
+      console.log(err)
       res.status(422).json(err);
     })
   });
 
   var resource = {
-  resourceName: 'NEW HIP SPOT',
+  resourceName: 'd4ddad HIPs S23d4POT',
   appFeePercentageTake:  0,
   appFeeFlatFeeTake: 0,
   bookingPercentTake: 0,
   bookingFlatFeeTake: 0,
   description: 'This is a sample',
-  point: st.geomFromText('Point(-86.681290 41.505493)', 4326),
+  point: st.geomFromText('Point(-86.3332343 41.32333324)', 4326),
   cancellationPolicyPercentTake: 0,
   cancellationPolicyFlatFeeTake: 0,
   cancellationPolicyWindow: 24,
-  streetAddress: '901 red river',
+  streetAddress: 'ee222323332333e2333wr red river',
   city: 'Cleveland',
   state: 'OH',
   zipcode: 44094,
@@ -128,7 +129,7 @@ router.route('/enroll')
 }
 
 var service = {
-  serviceDescription: 'service description',
+  serviceDescription: 'serv4dice description',
   // service_resource_id: resource,
   serviceType: 'private',
   serviceName: 'Privates',
