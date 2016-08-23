@@ -29,7 +29,7 @@ var ioListeners = {
           user: message.user
         }).then(function(chat) {
           io.to(message.conversation).emit('message', message);
-          conversations.updateById(message.conversation, {lastMessage: chat[0]})
+          conversations.updateById(message.conversation, {last_message: chat[0]})
         })
       });
 

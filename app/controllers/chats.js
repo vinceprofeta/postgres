@@ -12,7 +12,7 @@ var chats = {};
 chats.getAll = function(limit, offset) {
   return Chats.fetchAll({
     withRelated: [{'user': function(qb) {
-      qb.column('id', 'firstName', 'lastName')
+      qb.column('id', 'first_name', 'last_name')
     }}],
   })
 };
@@ -20,7 +20,7 @@ chats.getAll = function(limit, offset) {
 chats.getById = function(id) {
   return Chats.where('id', id).fetch({
     withRelated: [{'user': function(qb) {
-      qb.column('id', 'firstName', 'lastName')
+      qb.column('id', 'first_name', 'last_name')
     }}],
   })
 };
@@ -28,7 +28,7 @@ chats.getById = function(id) {
 chats.getChatsInConversation = function(conversationId) {
   return Chats.where('chat_conversation_id', conversationId).fetchAll({
      withRelated: [{'user': function(qb) {
-      qb.column('id', 'firstName', 'lastName')
+      qb.column('id', 'first_name', 'last_name')
     }}],
   })
 };

@@ -29,12 +29,12 @@ users.getById = function(id) {
 
 users.updateById = function(id, params) {
   var updatedObj = {};
-  if (params.firstName) {
-    updatedObj.firstName = params.firstName;
+  if (params.first_name) {
+    updatedObj.first_name = params.first_name;
   }
 
-  if (params.lastName) {
-    updatedObj.lastName = params.lastName;
+  if (params.last_name) {
+    updatedObj.last_name = params.last_name;
   }
 
   if (params.email) {
@@ -57,17 +57,13 @@ users.updateById = function(id, params) {
     updatedObj.avatar = params.avatar;
   }
 
-  if (params.deleted) {
-    updatedObj.deleted = params.deleted;
+  if (params.delete_date) {
+    updatedObj.delete_date = params.delete_date;
   }
 
-  if (params.facebookCredentials) {
-    updatedObj.facebookCredentials = params.facebookCredentials;
+  if (params.facebook_credentials) {
+    updatedObj.facebook_credentials = params.facebook_credentials;
   }
-
-  // if (params.facebookCredentials) {
-  //   updatedObj.facebookCredentials = params.facebookCredentials;
-  // }
 
   return bookshelf.knex('users')
   .where('id', '=', id)
@@ -77,12 +73,12 @@ users.updateById = function(id, params) {
 
 users.add = function(params) {
   var user = { 
-    firstName: params.first,
-    lastName: params.last,
+    first_name: params.first,
+    last_name: params.last,
     email: params.email,
     password: params.password,
-    facebookUserId: params.facebookUserId || null,
-    facebookCredentials: params.facebookCredentials || {}
+    facebook_user_id: params.facebook_user_id || null,
+    facebook_credentials: params.facebook_credentials || {}
   };
   return new Users(user).save()
 };
@@ -90,8 +86,8 @@ users.add = function(params) {
 
 users.addUserWithMembership = function(params) {
   var user = { 
-    firstName: params.first,
-    lastName: params.last,
+    first_name: params.first,
+    last_name: params.last,
     email: params.email,
     password: params.password
   };
@@ -118,7 +114,7 @@ users.addUserWithMembership = function(params) {
 
 users.addMembership = function(params) {
   // check for valid role and add membership
-  return bookshelf.knex('roles').where('roleName', '=', params.role).returning('id')
+  return bookshelf.knex('roles').where('role_name', '=', params.role).returning('id')
   .then(function(role) {
     role = _.get(role, '[0].id');
     if (!role) { throw new Error({error: 'role does not exist'})}
@@ -137,7 +133,7 @@ users.getMemberships = function(id) {
   return Memberships.where('membership_user_id', id).fetchAll({
     // withRelated: [{'conversation.users.user': function(qb) {
     //   // qb.query.whereIn('id', ids);
-    //   qb.column('id', 'firstName', 'lastName')
+    //   qb.column('id', 'first_name', 'last_name')
     // }}],
   })
 

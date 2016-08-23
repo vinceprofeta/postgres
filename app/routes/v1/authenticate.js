@@ -62,11 +62,11 @@ router.route('/')
           var lastName = fullName.pop();
           var cUser = {
             email: decodeURIComponent(body.email),
-            first: fullName.join(' '),
-            last: lastName,
+            first_name: fullName.join(' '),
+            last_name: lastName,
             password: uuid.v4(),
-            facebookUserId: req.body.userId,
-            facebookCredentials: {
+            facebook_user_id: req.body.userId,
+            facebook_credentials: {
               token: req.body.token,
               tokenExpirationDate: req.body.tokenExpirationDate
             }

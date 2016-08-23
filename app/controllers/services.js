@@ -56,14 +56,15 @@ services.add = function(data) {
   var params = data.params;
   // resource id - GET reource
   var service = { 
-    serviceDescription: "TEST service description",
-    serviceType: "private",
-    serviceName: "Half",
+    service_description: "TEST service description",
+    service_type: "private",
+    service_name: "Half",
     active: true,
     image: "test",
-    serviceCapacity: 3,
-    serviceDuration: 30,
-    servicePrice: 60
+    service_capacity: 3,
+    service_duration: 30,
+    service_price: 60,
+    service_skill_id: 1
   };
   service = _.merge(service, {service_resource_id: id})
   return bookshelf.knex('services').insert(service).returning('*')
@@ -73,16 +74,16 @@ services.add = function(data) {
 services.updateById = function(id, params) {
   var updatedObj = {};
 
-  if (params.serviceDescription) {
-    updatedObj.serviceDescription = params.serviceDescription;
+  if (params.service_description) {
+    updatedObj.service_description = params.service_description;
   }
 
-  if (params.serviceType) {
-    updatedObj.serviceType = params.serviceType;
+  if (params.service_type) {
+    updatedObj.service_type = params.service_type;
   }
 
-  if (params.serviceName) {
-    updatedObj.serviceName = params.serviceName;
+  if (params.service_name) {
+    updatedObj.service_name = params.service_name;
   }
 
   if (params.active) {
@@ -93,16 +94,16 @@ services.updateById = function(id, params) {
     updatedObj.image = params.image;
   }
 
-  if (params.serviceCapacity) {
-    updatedObj.serviceCapacity = params.serviceCapacity;
+  if (params.service_capacity) {
+    updatedObj.service_capacity = params.service_capacity;
   }
 
-  if (params.serviceDuration) {
-    updatedObj.serviceDuration = params.serviceDuration;
+  if (params.service_duration) {
+    updatedObj.service_duration = params.service_duration;
   }
 
-  if (params.servicePrice) {
-    updatedObj.servicePrice = params.servicePrice;
+  if (params.service_price) {
+    updatedObj.service_price = params.service_price;
   }
 
   return bookshelf.knex('services')

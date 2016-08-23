@@ -1,5 +1,6 @@
 var knex = require('../db/knex');
 var st = require('knex-postgis')(knex);
+var resource;
 var user1;
 var user2;
 var user3;
@@ -61,28 +62,28 @@ exports.seed = function(knex, Promise) {
         .then(function() {
             return Promise.join(
                 knex('roles').insert({
-                  roleName: 'user'
+                  role_name: 'user'
                 }).returning('id')
             );
         })
         .then(function() {
             return Promise.join(
                 knex('roles').insert({
-                  roleName: 'agent'
+                  role_name: 'agent'
                 }).returning('id')
             );
         })
         .then(function() {
             return Promise.join(
                 knex('roles').insert({
-                  roleName: 'resource-admin'
+                  role_name: 'resource-admin'
                 }).returning('id')
             );
         })
         .then(function() {
             return Promise.join(
                 knex('roles').insert({
-                  roleName: 'app-owner'
+                  role_name: 'app-owner'
                 }).returning('id')
             );
         })
@@ -90,14 +91,14 @@ exports.seed = function(knex, Promise) {
         .then(function() {
             return Promise.join(
                 knex('users').insert({
-                  firstName: 'Vinces',
-                  lastName: 'Profeta',
+                  first_name: 'Vinces',
+                  last_name: 'Profeta',
                   email: 'vprofeta12@gmail.com',
                   bio: 'Worked in dev for mobile and web',
                   phone: '444-444-4444',
                   password: 'd',
                   avatar: 'TODO',
-                  stripeCustomerId: '123'
+                  stripe_customer_id: '123'
                 }).returning('id')
             );
         })
@@ -105,14 +106,14 @@ exports.seed = function(knex, Promise) {
             user1 = ids[0][0];
             return Promise.join(
                 knex('users').insert({
-                  firstName: 'James',
-                  lastName: 'Harden',
+                  first_name: 'James',
+                  last_name: 'Harden',
                   email: 'James@gmail.com',
                   bio: 'Test master in web and mobile',
                   phone: '444-444-4444',
                   password: 'd',
                   avatar: 'TODO',
-                  stripeCustomerId: '1234'
+                  stripe_customer_id: '1234'
                 }).returning('id')
             );
         })
@@ -120,14 +121,14 @@ exports.seed = function(knex, Promise) {
             user2 = ids[0][0];
             return Promise.join(
                 knex('users').insert({
-                  firstName: 'Lebron',
-                  lastName: 'Hames',
+                  first_name: 'Lebron',
+                  last_name: 'Hames',
                   email: 'lbj@gmail.com',
                   bio: 'Basketball Star',
                   phone: '444-444-4444',
                   password: 'd',
                   avatar: 'TODO',
-                  stripeCustomerId: '1234'
+                  stripe_customer_id: '1234'
                 }).returning('id')
             );
         })
@@ -135,14 +136,14 @@ exports.seed = function(knex, Promise) {
             user3 = ids[0][0];
             return Promise.join(
                 knex('users').insert({
-                  firstName: 'Dana',
-                  lastName: 'Gordon',
+                  first_name: 'Dana',
+                  last_name: 'Gordon',
                   email: 'dana@gmail.com',
                   bio: 'Movie Star',
                   phone: '444-444-4444',
                   password: 'd',
                   avatar: 'TODO',
-                  stripeCustomerId: '1234'
+                  stripe_customer_id: '1234'
                 }).returning('id')
             );
         })
@@ -151,55 +152,55 @@ exports.seed = function(knex, Promise) {
             return Promise.join(
                 knex('resources').insert({
                   resourceName: 'Vinces Spot',
-                  appFeePercentageTake:  0,
-                  appFeeFlatFeeTake: 100,
-                  bookingPercentTake: 0,
-                  bookingFlatFeeTake: 100,
+                  app_fee_percentage_take:  0,
+                  app_fee_flat_fee_take: 100,
+                  booking_percent_take: 0,
+                  booking_flat_fee_take: 100,
                   description: 'This is a sample',
                   point: st.geomFromText('Point(-81.681290 41.505493)', 4326),
-                  cancellationPolicyPercentTake: 0,
-                  cancellationPolicyFlatFeeTake: 100,
-                  cancellationPolicyWindow: 18,
-                  streetAddress: '2941 lamplight ln',
+                  cancellation_policy_percent_take: 0,
+                  cancellation_policy_flat_fee_take: 100,
+                  cancellation_policy_window: 18,
+                  street_address: '2941 lamplight ln',
                   city: 'Cleveland',
                   state: 'OH',
                   zipcode: 44094,
                   phone: '440-444-4444',
                   email: 'vprofeta12@gmail.com',
                   website: 'www.google.com',
+                  timezone: 'bs'
                 }).returning('id')
             );
         })
         .then(function(ids) {
-          var resource = ids[0][0];
+           resource = ids[0][0];
             return Promise.join(
                 knex('services').insert({
-                    serviceDescription: 'service description',
+                    service_description: 'service description',
                     service_resource_id: resource,
-                    serviceType: 'private',
-                    serviceName: 'Privates',
+                    service_type: 'private',
+                    service_name: 'Privates',
                     active: true,
                     image: 'test',
-                    serviceCapacity: 3,
-                    serviceDuration: 30,
-                    servicePrice: 60,
+                    service_capacity: 3,
+                    service_duration: 30,
+                    service_price: 60,
                     service_skill_id: skill1
                 }).returning('id')
             );
         })
         .then(function(ids) {
-          var resource = ids[0][0];
             return Promise.join(
                 knex('services').insert({
-                    serviceDescription: 'service description',
+                    service_description: '2 service description 2',
                     service_resource_id: resource,
-                    serviceType: 'private',
-                    serviceName: 'Privates',
+                    service_type: '2 private 2',
+                    service_name: '2 Privates 2',
                     active: true,
                     image: 'test',
-                    serviceCapacity: 3,
-                    serviceDuration: 30,
-                    servicePrice: 60,
+                    service_capacity: 3,
+                    service_duration: 30,
+                    service_price: 60,
                     service_skill_id: skill1
                 }).returning('id')
             );
@@ -208,14 +209,14 @@ exports.seed = function(knex, Promise) {
 
         // ADD CALENDAR SEED
         .then(function(ids) {
-          var resource = ids[0][0];
+          var service = ids[0][0];
             return Promise.join(
               knex('calendars').insert({
-                calendar_agent_id: 1,
-                calendar_service_id: 1,
-                calendar_resource_id: 1,
-                calendarCapacity: 3,
-                calendarPrice: 60,
+                calendar_agent_id: user1,
+                calendar_service_id: service,
+                // calendar_resource_id: 1,
+                calendar_capacity: 3,
+                calendar_price: 60,
               }).returning('id')
           );
         })

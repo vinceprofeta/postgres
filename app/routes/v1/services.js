@@ -109,17 +109,15 @@ router.route('/enroll')
   });
 
   var resource = {
-  resourceName: 'd4ddad HIPs S23d4POT',
-  appFeePercentageTake:  0,
-  appFeeFlatFeeTake: 0,
-  bookingPercentTake: 0,
-  bookingFlatFeeTake: 0,
+  name: 'd4ddad HIPs S23d4POT',
+  app_fee_flat_fee_take: 0,
+  booking_flat_fee_take: 0,
   description: 'This is a sample',
   point: st.geomFromText('Point(-86.3332343 41.32333324)', 4326),
-  cancellationPolicyPercentTake: 0,
-  cancellationPolicyFlatFeeTake: 0,
-  cancellationPolicyWindow: 24,
-  streetAddress: 'ee222323332333e2333wr red river',
+  cancellation_policy_percent_take: 0,
+  cancellation_policy_flat_fee_take: 0,
+  cancellation_policy_window: 24,
+  street_address: 'ee222323332333e2333wr red river',
   city: 'Cleveland',
   state: 'OH',
   zipcode: 44094,
@@ -129,15 +127,15 @@ router.route('/enroll')
 }
 
 var service = {
-  serviceDescription: 'serv4dice description',
+  service_description: 'serv4dice description',
   // service_resource_id: resource,
-  serviceType: 'private',
-  serviceName: 'Privates',
+  service_type: 'private',
+  service_name: 'Privates',
   active: true,
   image: 'test',
-  serviceCapacity: 3,
-  serviceDuration: 30,
-  servicePrice: 60,
+  service_capacity: 3,
+  service_duration: 30,
+  service_price: 60,
   service_skill_id: 1
 }
 

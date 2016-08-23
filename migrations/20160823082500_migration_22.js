@@ -89,14 +89,15 @@ exports.up = function(knex, Promise) {
     // ________________________________________________________
 
     knex.schema.createTable('calendarRecurringDay', function(table) {
+      table.increments();
       table.integer('calendar_id').references('calendars.id').notNullable();
-      table.integer('dow').notNullable();
-      table.enu('dow', [0,1,2,3,4,5,6])
+      table.enu('dow', [0,1,2,3,4,5,6]).notNullable();
     }),
 
     // ________________________________________________________
 
     knex.schema.createTable('calendarRecurringTime', function(table) {
+      table.increments();
       table.integer('calendar_recurring_day_id').references('calendarRecurringDay.id').notNullable();
       table.time('start').notNullable();
       table.time('end').notNullable();
@@ -106,6 +107,7 @@ exports.up = function(knex, Promise) {
     // ________________________________________________________
 
     knex.schema.createTable('calendarScheduleOverride', function(table) {
+      table.increments();
       table.integer('calendar_id').references('calendars.id').notNullable();
       table.boolean('available').notNullable();
       table.time('start').notNullable();

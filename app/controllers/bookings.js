@@ -19,18 +19,17 @@ bookings.getAll = function(limit, offset) {
 bookings.getBookings = function(query) {
   query = query || {}
   var  queryObject = {
-    bookings_resource_id: query.resource,
-    bookings_agent_id: query.agent,
-    bookings_service_id: query.service,
-    bookingDuration: query.duration,
-    bookingCapacity: query.capacity,
+    // bookings_resource_id: query.resource,
+    // bookings_agent_id: query.agent,
+    booking_calendar_id: query.service,
+    
+    booking_capacity: query.capacity,
     bookingPrice: query.price,
-    bookingStatus: query.status,
+    booking_status: query.status,
 
     // TODO BEFORE AND AFTER QUERIES
-    bookingDate: query.date,
-    bookingStart: query.start,
-    bookingEnd: query.end,
+    start: query.date,
+    end: query.end
   };
 
   return Bookings.where(_.pickBy(queryObject, _.identity)).fetchAll({
@@ -55,17 +54,12 @@ bookings.add = function(data) {
   var params = data.params;
   // resource id - GET reource
   var booking = {
-    bookings_resource_id: '',
-    bookings_agent_id: '',
-    bookings_service_id: '',
-    bookingDate: '',
-    bookingStart: '',
-    bookingEnd: '',
-    bookingDuration: '',
-    bookingCapacity: '',
+    booking_calendar_id: '',
+    booking_capacity: '',
     bookingPrice: '',
-    bookingStatus: '',
-    notes: '',
+    booking_status: '',
+    start: '',
+    end: ''
   };
 
   return bookshelf.knex('bookings').insert(booking).returning('*')
@@ -77,45 +71,27 @@ bookings.add = function(data) {
 bookings.updateById = function(id, params) {
   var updatedObj = {};
 
-  if (params.bookingDate) {
-    updatedObj.bookingDate = params.bookingDate;
+  if (params.start) {
+    updatedObj.start = params.start;
     // SEND PUSH AND UPDATE USERS
   }
 
-  if (params.bookingStart) {
-    updatedObj.bookingStart = params.bookingStart;
+  if (params.end) {
+    updatedObj.end = params.end;
     // SEND PUSH AND UPDATE USERS
   }
 
-  if (params.bookingEnd) {
-    updatedObj.bookingEnd = params.bookingEnd;
-    // SEND PUSH AND UPDATE USERS
-  }
 
-  if (params.bookingDuration) {
-    updatedObj.bookingDuration = params.bookingDuration;
-
-  }
-
-  if (params.bookingCapacity) {
-    updatedObj.bookingCapacity = params.bookingCapacity;
-  }
-
-  if (params.bookingPrice) {
-    updatedObj.bookingPrice = params.bookingPrice;
-    // SEND PUSH AND UPDATE USERS
-  }
-
-  if (params.bookingStatus) {
-    updatedObj.bookingStatus = params.bookingStatus;
+  if (params.status) {
+    updatedObj.status = params.status;
   }
 
   if (params.notes) {
     updatedObj.notes = params.notes;
   }
 
-  if (params.customData) {
-    updatedObj.customData = params.customData;
+  if (params.custom_data) {
+    updatedObj.custom_data = params.custom_data;
   }
 
   return bookshelf.knex('bookings')

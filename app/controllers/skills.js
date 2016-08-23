@@ -32,8 +32,8 @@ skills.updateById = function(id, params) {
   if (params.rank) {
     updatedObj.rank = params.rank;
   }
-  if (params.deleted) {
-    updatedObj.deleted = params.deleted;
+  if (params.delete_date) {
+    updatedObj.delete_date = params.delete_date;
   }
 
   return bookshelf.knex('skills')

@@ -23,8 +23,8 @@ router.route('/')
       
   })
   .get(function(req, res) {
-    if (_.get(req.query, 'conversationId')) {
-      Chats.getChatsInConversation(req.query.conversationId)
+    if (_.get(req.query, 'conversation_id')) {
+      Chats.getChatsInConversation(req.query.conversation_id)
         .then(function(chats) {
           console.log(chats, 'afkasdjflaksfjaslfajklsd')
           res.json(chats);

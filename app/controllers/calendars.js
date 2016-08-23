@@ -103,8 +103,8 @@ calendars.updateById = function(id, params) {
     updatedObj.calendarPrice = params.calendarPrice;
   }
 
-  if (params.deleted) {
-    updatedObj.deleted = params.deleted;
+  if (params.delete_date) {
+    updatedObj.delete_date = params.delete_date;
   }
 
   return bookshelf.knex('calendars')

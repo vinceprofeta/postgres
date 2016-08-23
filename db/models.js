@@ -16,7 +16,7 @@
 // mm.usersConversations = bookshelf.Model.extend({
 //   tableName: 'usersConversations',
 //   hasTimestamps: true,
-//   conversationId: function() {
+//   conversation_id: function() {
 //     return this.belongsTo(mm.Conversations);
 //   },
 //   user: function() {

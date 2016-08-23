@@ -70,7 +70,7 @@ rooms.getConversationsForUser = function(id) {
   return UsersConversations.where('conversation_user_id', id).fetchAll({
     withRelated: [{'conversation.users.user': function(qb) {
       // qb.query.whereIn('id', ids);
-      qb.column('id', 'firstName', 'lastName')
+      qb.column('id', 'first_name', 'last_name')
     }}],
   })
 };
@@ -141,7 +141,7 @@ module.exports = rooms;
     // }).fetchAll({
     //   // withRelated: [{'conversation.users.user': function(qb) {
     //   //   // qb.query.whereIn('id', ids);
-    //   //   qb.column('id', 'firstName', 'lastName')
+    //   //   qb.column('id', 'first_name', 'last_name')
     //   // }}],
     // })
     // bookshelf.knex.raw('SELECT * FROM conversations WHERE id IN (SELECT conversation_id FROM "usersConversations" WHERE conversation_user_id IN (' + ids + ') GROUP BY conversation_id HAVING COUNT(*) = '+ids.length+')')

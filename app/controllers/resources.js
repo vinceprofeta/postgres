@@ -73,16 +73,16 @@ resources.updateAppFees = function(id, params) {
 
 resources.updateById = function(id, params) {
   var updatedObj = {};
-  if (params.resourceName) {
-    updatedObj.resourceName = params.resourceName;
+  if (params.name) {
+    updatedObj.name = params.name;
   }
 
-  if (params.bookingPercentTake) {
-    updatedObj.bookingPercentTake = params.bookingPercentTake;
+  if (params.booking_percent_take) {
+    updatedObj.booking_percent_take = params.booking_percent_take;
   }
 
-  if (params.bookingFlatFeeTake) {
-    updatedObj.bookingFlatFeeTake = params.bookingFlatFeeTake;
+  if (params.booking_flat_fee_take) {
+    updatedObj.booking_flat_fee_take = params.booking_flat_fee_take;
   }
 
   if (params.description) {
@@ -93,20 +93,20 @@ resources.updateById = function(id, params) {
     updatedObj.point = params.point;
   }
 
-  if (params.cancellationPolicyPercentTake) {
-    updatedObj.cancellationPolicyPercentTake = params.cancellationPolicyPercentTake;
+  if (params.cancellation_policy_percent_take) {
+    updatedObj.cancellation_policy_percent_take = params.cancellation_policy_percent_take;
   }
 
-  if (params.cancellationPolicyFlatFeeTake) {
-    updatedObj.cancellationPolicyFlatFeeTake = params.cancellationPolicyFlatFeeTake;
+  if (params.cancellation_policy_flat_fee_take) {
+    updatedObj.cancellation_policy_flat_fee_take = params.cancellation_policy_flat_fee_take;
   }
 
-  if (params.cancellationPolicyWindow) {
-    updatedObj.cancellationPolicyWindow = params.cancellationPolicyWindow;
+  if (params.cancellation_policy_window) {
+    updatedObj.cancellation_policy_window = params.cancellation_policy_window;
   }
 
-  if (params.streetAddress) {
-    updatedObj.streetAddress = params.streetAddress;
+  if (params.street_address) {
+    updatedObj.street_address = params.street_address;
   }
 
   if (params.city) {
@@ -151,16 +151,16 @@ resources.getMembers = function(id, query, role) {
     status: query.status
   }
   return bookshelf.knex('roles')
-  .where('roleName', '=', role).then(function(role) {
+  .where('role_name', '=', role).then(function(role) {
     var role = _.get(role, '[0].id');
     queryObject.membership_role_id = role;
     return Memberships.where(_.pickBy(queryObject, _.identity)).fetchAll({
       withRelated: [
         {'user': function(qb) {
-          qb.column('id', 'firstName', 'lastName')
+          qb.column('id', 'first_name', 'last_name')
         }},
         {'role': function(qb) {
-          qb.column('id', 'roleName')
+          qb.column('id', 'role_name')
         }}
       ],
     }).catch(function(err) {
@@ -188,7 +188,7 @@ resources.addWithServiceMembershipCalendar = function(user, resource, service) {
           .then(function(serviceAdded) { 
             serviceAdded = _.get(serviceAdded, 'attributes.id');
 
-            return bookshelf.knex('roles').transacting(trx).where('roleName', '=', 'resource-admin').returning('id')
+            return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id')
             .then(function(role) {
               role = _.get(role, '[0].id');
               if (!role) { throw new Error({error: 'role does not exist'})}
@@ -203,10 +203,10 @@ resources.addWithServiceMembershipCalendar = function(user, resource, service) {
                 var calendar = {
                   calendar_agent_id: Number(user), 
                   calendar_service_id: Number(serviceAdded), 
-                  calendar_resource_id: Number(resourceAdded),
+                  // calendar_resource_id: Number(resourceAdded),
                   point: resource.point,
-                  calendarCapacity: 1, //REMOVEABLE
-                  calendarPrice: 100 // REMOVEABLE
+                  calendar_capacity: 1, //REMOVEABLE
+                  calendar_price: 100 // REMOVEABLE
                 } 
                 return new Calendars(calendar).save(null, {transacting: trx});
               })
