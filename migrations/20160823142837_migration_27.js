@@ -91,7 +91,7 @@ exports.up = function(knex, Promise) {
     knex.schema.createTable('calendarRecurringDay', function(table) {
       table.increments();
       table.integer('calendar_id').references('calendars.id').notNullable();
-      table.enu('dow', [0,1,2,3,4,5,6]).notNullable();
+      table.integer('dow').notNullable();
     }),
 
     // ________________________________________________________

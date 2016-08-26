@@ -5,12 +5,14 @@ var router = express.Router();
 
 var knex = require('../../../db/knex');
 var st = require('knex-postgis')(knex);
+var _ = require('lodash')
 
 // Utils
 var hasRole = require('../../utils/roleMiddleware');
 
 // Controllers
 var CalendarsController = require('../../controllers/calendars');
+var AvailabilityController = require('../../controllers/availability');
 
 router.route('/')
   .post(function(req, res) {
@@ -41,7 +43,6 @@ router.route('/:id')
   .get(function(req, res) {
     CalendarsController.getById(req.params.id)
     .then(function(calendars) {
-      console.log(calendars.toJSON())
       res.json(calendars);
     })
     .catch(function(err) {
@@ -56,6 +57,28 @@ router.route('/:id')
     .catch(function(err) {
       res.status(422).json({error: err});
     })
+  });
+
+
+  router.route('/:id/availability')
+  .get(function(req, res) {
+    CalendarsController.getById(req.params.id)
+    .then(function(calendars) {
+      const serviceId = calendars.attributes.calendar_service_id;
+      const agentId = calendars.attributes.calendar_agent_id;
+      const query = _.merge(req.query, {serviceId, agentId})
+      return AvailabilityController.getAll(query)
+    })
+    .then(function(a) {
+      res.json(a);
+    })
+    .catch(function(err) {
+      console.log(err)
+      res.status(422).json(err);
+    })
+  })
+  .put(function(req, res) {
+    
   });
 
 

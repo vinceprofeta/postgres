@@ -73,8 +73,8 @@ users.updateById = function(id, params) {
 
 users.add = function(params) {
   var user = { 
-    first_name: params.first,
-    last_name: params.last,
+    first_name: params.first_name,
+    last_name: params.last_name,
     email: params.email,
     password: params.password,
     facebook_user_id: params.facebook_user_id || null,

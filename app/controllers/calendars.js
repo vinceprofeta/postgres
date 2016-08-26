@@ -17,7 +17,7 @@ calendars.getAll = function(limit, offset) {
 calendars.getCalendars = function(query) {
   query = query || {}
   var  queryObject = {
-    calendar_resource_id: query.resource,
+    // calendar_resource_id: query.resource,
     calendar_agent_id: query.agent,
     calendar_service_id: query.service
   };
@@ -43,7 +43,7 @@ calendars.getCalendarsBySkill = function(query) {
   .join('calendars', 'services.id', '=', 'calendars.calendar_service_id')
   // .select('calendars.calendar_agent_id')
   .join('users', 'calendars.calendar_agent_id', '=', 'users.id')
-  .select('calendars.calendarPrice', 'calendars.calendar_agent_id', 'users.facebookUserId', 'users.firstName', 'users.lastName', 'services.serviceName', 'services.servicePrice', 'services.id', 'calendars.id as calendarId')
+  .select('calendars.calendar_price', 'calendars.calendar_agent_id', 'users.facebook_user_id', 'users.first_name', 'users.last_name', 'services.service_name', 'services.service_price', 'services.id', 'calendars.id as calendar_id')
   // Calendars.where(_.pickBy(queryObject, _.identity)).fetchAll({
   //   withRelated: ['agent'], //'resource', 'service'
   // })
@@ -61,7 +61,7 @@ calendars.getPopularCalendars = function(query) {
 
 calendars.getById = function(id) {
   return Calendars.where('id', id).fetch({
-    withRelated: ['resource', 'service', 'agent'],
+    withRelated: ['service', 'agent'],
   })
 };
 
@@ -80,7 +80,7 @@ calendars.add = function(data) {
   calendar = _.merge(calendar, {
     calendar_agent_id: agentId, 
     calendar_service_id: serviceId, 
-    calendar_resource_id: resourceId
+    // calendar_resource_id: resourceId
   });
   return bookshelf.knex('calendars').insert(calendar).returning('*')
 };

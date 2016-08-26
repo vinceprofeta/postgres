@@ -1,0 +1,133 @@
+# Calendar schedule for instructor 6
+select au.first_name, au.last_name, ds.service_name, dc.calendar_service_id, dcd.dow, dct.*
+from calendars dc
+inner join "calendarRecurringDay" dcd
+on dcd.calendar_id = dc.id
+inner join users au
+on au.id = dc.calendar_agent_id
+inner join services ds
+on ds.id = dc.calendar_service_id
+inner join "calendarRecurringTime" dct
+on dct.calendar_recurring_day_id = dcd.id
+where dc.calendar_agent_id = 1
+
+select au.first_name, au.last_name, ds.service_name, dc.calendar_service_id, dcd.dow, dct.* 
+from calendars dc
+inner join "calendarRecurringDay" dcd
+on dcd.calendar_id = dc.id
+inner join users au
+on au.id = dc.calendar_agent_id
+inner join services ds
+on ds.id = dc.calendar_service_id
+inner join "calendarRecurringTime" dct
+on dct.calendar_recurring_day_id = dcd.id
+where dc.calendar_agent_id = 1 and dc.calendar_service_id = 1
+
+
+
+# is user_id 6 available to make schedule from 3-5 on tuesday (user is instructor)
+# if count > 0, there is a conflict
+# to check individual service conflict - add "and dc.service_id = 13" to where clause
+select count(1)
+from calendars dc
+inner join "calendarRecurringDay" dcd
+on dcd.calendar_id = dc.id
+inner join "calendarRecurringTime" dct
+on dct.calendar_recurring_day_id = dcd.id
+where dc.calendar_agent_id = 1 and dcd.dow = 2 and (
+  (dct.start > TO_TIMESTAMP('06:00:00', 'HH24:MI:SS')::TIME and dct.start < TO_TIMESTAMP('07:00:00', 'HH24:MI:SS')::TIME)
+  or 
+  (dct.end > TO_TIMESTAMP('06:00:00', 'HH24:MI:SS')::TIME and dct.start < TO_TIMESTAMP('07:00:00', 'HH24:MI:SS')::TIME)
+  or 
+  (dct.start <= TO_TIMESTAMP('06:00:00', 'HH24:MI:SS')::TIME and dct.end >= TO_TIMESTAMP('07:00:00', 'HH24:MI:SS')::TIME)
+)
+
+
+# check instructor schedule on day of week
+
+select au.first_name, au.last_name, ds.service_name, dc.calendar_service_id, dcd.dow, dct.*
+from calendars dc
+inner join "calendarRecurringDay" dcd
+on dcd.calendar_id = dc.id
+inner join users au
+on au.id = dc.calendar_agent_id
+inner join services ds
+on ds.id = dc.calendar_service_id
+inner join "calendarRecurringTime" dct
+on dct.calendar_recurring_day_id = dcd.id
+where dc.calendar_agent_id = 6
+and dcd.dow = EXTRACT(DOW FROM TIMESTAMP '2016-08-19 16:41:12.15397-05');
+
+
+
+
+
+
+# test insert booking
+
+-- insert into data_booking (booking_user_id, calendar_id, "end", start, created, updated)
+-- values (5, 10, '2016-08-19 03:00:00', '2016-08-19 04:00:00', now(), now())
+
+
+# For a given calendar and service, get the availability and bookings for a given day
+# the bookings column shows all of the bookings within that window, but it doesn not limit based on
+# capacity so you would need some client side / app side logic
+
+
+select au.first_name, au.last_name, ds.service_name, dc.calendar_service_id,
+dc.id as calendar_id, dc.calendar_capacity, dcd.dow, dct.*,
+(
+   select json_agg(bookings)
+   from (
+      select db.start, db.end
+      from bookings db
+      where db.booking_calendar_id = dc.id
+      and "time"(db.start) between dct.start and dct.end
+      and "time"(db."end") between dct.start and dct.end
+   ) bookings
+) as bookings
+from calendars dc
+inner join "calendarRecurringDay" dcd
+on dcd.calendar_id = dc.id
+inner join users au
+on au.id = dc.calendar_agent_id
+inner join services ds
+on ds.id = dc.calendar_service_id
+inner join "calendarRecurringTime" dct
+on dct.calendar_recurring_day_id = dcd.id
+where dc.calendar_agent_id = 1 and dc.calendar_service_id = 1
+and dcd.dow = EXTRACT(DOW FROM TIMESTAMP '2016-08-19 16:41:12.15397-05')
+group by dcd.id, au.id, ds.id, dct.id, dc.id
+
+
+# to turn this into on a monthly basis, you could simply do the following
+# where we generate a series of dates to join on, then use those dates
+# to check agains the day of week. This is also how you would do the overrides
+select au.first_name, au.last_name, ds.service_name, dc.calendar_service_id,
+dc.id as calendar_id, dc.calendar_capacity, dcd.dow, dct.*,
+(
+   select json_agg(bookings)
+   from (
+      select db.start, db.end
+      from bookings db
+      where db.booking_calendar_id = dc.id
+      and "time"(db.start) between dct.start and dct.end
+      and "time"(db."end") between dct.start and dct.end
+   ) bookings
+) as bookings
+from calendars dc
+inner join "calendarRecurringDay" dcd
+on dcd.calendar_id = dc.id
+inner join users au
+on au.id = dc.calendar_agent_id
+inner join services ds
+on ds.id = dc.calendar_service_id
+inner join "calendarRecurringTime" dct
+on dct.calendar_recurring_day_id = dcd.id
+inner join generate_series('2016-08-01 00:00'::timestamp,
+                              '2016-08-31 00:00', '1 day') as s(a)
+on 1=1
+where dc.calendar_agent_id = 1 and dc.calendar_service_id = 1
+and dcd.dow = EXTRACT(DOW FROM s.date)
+group by dcd.id, au.id, ds.id, dct.id, dc.id, s.date
+order by s.date desc
