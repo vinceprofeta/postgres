@@ -23,7 +23,7 @@ calendars.getCalendars = function(query) {
   };
 
   return Calendars.where(_.pickBy(queryObject, _.identity)).fetchAll({
-    withRelated: ['agent'], //'resource', 'service'
+    withRelated: ['agent', 'service'], //'resource', 'service'
   })
   // .limit(query.limit || 10)
   // .skip(query.offset || 0)

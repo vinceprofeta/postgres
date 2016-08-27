@@ -23,7 +23,7 @@ availability.getAll = function(properties) {
 };
 
 function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
-  return `select ${distinct ? 'DISTINCT ON (s_date)' : ''} s.date, au.first_name, au.last_name, ds.service_name, calendar_service_id,
+  return `select ${distinct ? 'DISTINCT ON (s_date)' : ''} s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id,
   dc.id as calendar_id, calendar_capacity, dcd.dow, dct.start, dct.end, s.date::timestamp::date as s_date,
   (
      select jsonb_agg(bookings)
@@ -66,7 +66,7 @@ function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
 
   union
 
-  select s.date, au.first_name, au.last_name, ds.service_name, calendar_service_id,
+  select s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id,
   dc.id as calendar_id, calendar_capacity, EXTRACT(DOW FROM s.date) as dow, dcd.start::timestamp::time, dcd.end::timestamp::time, s.date::timestamp::date as s_date,
   (
      select jsonb_agg(bookings)

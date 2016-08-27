@@ -323,7 +323,7 @@ exports.up = function(knex, Promise) {
     knex.schema.createTable('favorites', function(table) {
       table.increments();
       table.integer('user_id').references('users.id').notNullable();
-      table.integer('favorites_service_id').references('services.id');
+      table.integer('favorites_calendar_id').references('calendars.id');
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 

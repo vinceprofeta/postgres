@@ -28,9 +28,21 @@ bookings.getBookings = function(query) {
     booking_status: query.status,
 
     // TODO BEFORE AND AFTER QUERIES
-    start: query.date,
+    start: query.start,
     end: query.end
   };
+
+  return bookshelf.knex.raw(`
+    select bk.*, cd.*, us.first_name, us.last_name
+    from bookings bk
+    inner join calendars cd
+    on cd.id = bk.id
+    inner join users us
+    on cd.calendar_agent_id = us.id
+    where cd.id = bk.booking_calendar_id
+  `).then((result) => {
+    return result.rows;
+  })
 
   return Bookings.where(_.pickBy(queryObject, _.identity)).fetchAll({
     // withRelated: ['resource', 'skill'],

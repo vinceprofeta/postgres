@@ -25,10 +25,10 @@ favorites.getUsersFavroites = function(userId) {
 };
 
 
-favorites.add = function(userId, service) {
+favorites.add = function({user, calendar}) {
   var fav = {
-    user_id: userId,
-    favorites_service_id: service.id
+    user_id: user,
+    favorites_service_id: Number(calendar)
   }
   return bookshelf.knex('favorites').insert(fav).returning('*')
 };

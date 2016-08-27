@@ -14,7 +14,8 @@ var Roles// = require('../../models/roles');
 var Users = require('../../controllers/users');
 var Conversations = require('../../controllers/conversations');
 var Sessions = require('../../controllers/sessions');
-var Listings // = require('../../controllers/listings');
+var Calendars = require('../../controllers/calendars');
+var Bookings = require('../../controllers/bookings');
 var Transactions = require('../../controllers/transactions');
 var Favorites = require('../../controllers/favorites');
 
@@ -72,24 +73,24 @@ router.route('/')
   });
 
 
-router.route('/sessions')
+router.route('/bookings')
   .get(function(req, res) {
     var query = req.query || {};
     query.id = req.decoded._id;
-    console.log(query)
-    if (false) { //req.query && req.query.role !== 'user'
-      Users
-        .getBookedInstructorSessions(query)
-        .then(function(sessions) {
-          res.json(sessions);
+    if (true) { //req.query && req.query.role !== 'user'
+      Bookings
+        .getBookings(query)
+        .then(function(bookings) {
+          console.log(bookings);
+          res.json(bookings);
         });
 
     } else {
       query.notComplete = true;
       Users
         .getSessions(query)
-        .then(function(sessions) {
-          res.json(sessions);
+        .then(function(bookings) {
+          res.json(bookings);
         });
     }
 
@@ -152,7 +153,7 @@ router.route('/sessions/enroll')
 
 
 
-router.route('/listings/favorites')
+router.route('/calendars/favorites')
   .get(function(req, res) {
     var queryObject = {
       user: req.decoded._id
@@ -168,7 +169,7 @@ router.route('/listings/favorites')
   .put(function(req, res) {
     var params = {
       user: req.decoded._id,
-      listing: req.body.listing
+      calendar: req.body.calendar
     }
     Favorites.add(params)
     .then(function(favorites) {
@@ -183,12 +184,12 @@ router.route('/listings/favorites')
 
 
 
-router.route('/listings')
+router.route('/calendars')
   .get(function(req, res) {
     var queryObject = {
-      me: req.decoded._id
+      agent: req.decoded._id
     }
-    Listings.getListings(queryObject)
+    Calendars.getCalendars(queryObject)
     .then(function(response) {
       res.json(response);
     });
