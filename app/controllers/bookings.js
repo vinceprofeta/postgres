@@ -33,10 +33,12 @@ bookings.getBookings = function(query) {
   };
 
   return bookshelf.knex.raw(`
-    select bk.*, cd.*, us.first_name, us.last_name
+    select sv.*, bk.*, cd.*, us.first_name, us.last_name
     from bookings bk
     inner join calendars cd
     on cd.id = bk.id
+    inner join services sv
+    on sv.id = cd.calendar_service_id
     inner join users us
     on cd.calendar_agent_id = us.id
     where cd.id = bk.booking_calendar_id
