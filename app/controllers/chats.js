@@ -25,8 +25,8 @@ chats.getById = function(id) {
   })
 };
 
-chats.getChatsInConversation = function(conversationId) {
-  return Chats.where('chat_conversation_id', conversationId).fetchAll({
+chats.getChatsInConversation = function(conversation_id) {
+  return Chats.where('chat_conversation_id', conversation_id).fetchAll({
      withRelated: [{'user': function(qb) {
       qb.column('id', 'first_name', 'last_name')
     }}],

@@ -6,6 +6,7 @@ var router = express.Router();
 
 // Utils
 var cloudinary = require('../../utils/cloudinary');
+var bookshelf = require('../../../db/bookshelf');
 
 // Models
 var Roles// = require('../../models/roles');
@@ -13,11 +14,12 @@ var Roles// = require('../../models/roles');
 //Controllers
 var Users = require('../../controllers/users');
 var Conversations = require('../../controllers/conversations');
-var Sessions = require('../../controllers/sessions');
+var Services = require('../../controllers/services');
 var Calendars = require('../../controllers/calendars');
 var Bookings = require('../../controllers/bookings');
 var Transactions = require('../../controllers/transactions');
 var Favorites = require('../../controllers/favorites');
+var Memberships = require('../../controllers/memberships');
 
 router.route('/')
   .get(function(req, res) {
@@ -194,26 +196,42 @@ router.route('/calendars')
       res.json(response);
     });
   })
+
+  router.route('/services/add')
   .post(function(req, res) {
-    var listing;
-    if (req.body.listing) {
+    var service;
+    if (req.body.service) {
       try {
-        listing = JSON.parse(req.body.listing);
-        listing.instructor = req.decoded._id;
+        service = JSON.parse(req.body.service);
       } catch(err) {
-        console.log(err)
         res.status(422).json({error: 'invalid format'});
         return;
-      }
-      Listings
-        .add(listing)
+      } 
+      bookshelf.knex.transaction(function(trx) {     
+        return bookshelf.knex('memberships').transacting(trx).where({membership_user_id: req.decoded._id, default: true})
+        .then((m) => {
+          m = _.get(m, '[0]');
+          if (!m) { throw new Error({error: 'no membership found'}) };
+          service.service_resource_id = m.membership_resource_id;
+          return Services.add(service, trx)
+        })
         .then(function(response) {
-          res.json(response);
+          return Calendars.add({
+            agent: req.decoded._id,
+            service: response.id
+          }, trx)
+        })
+        .then(function(response) {
+          trx.commit
+          res.json({success: true});
         })
         .catch(function(err) {
           console.log(err)
+          trx.rollback
           res.status(422).json(err);
         });
+      });
+      
     }
   });
 

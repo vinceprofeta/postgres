@@ -66,23 +66,15 @@ calendars.getById = function(id) {
 };
 
 
-calendars.add = function(data) {
-  var serviceId =  1 //  data.service;
-  var resourceId =  1 //  data.resource;
-  var agentId =  1 //  data.agent;
-  var params = data.params;
-  // resource id - GET reource
+calendars.add = function(data, trx) {
+  trx = trx ? {transacting: trx} : {}
   var calendar = {   
-    calendarCapacity: 1,
-    calendarPrice: 0,
-    // point
+    calendar_agent_id: data.agent,
+    calendar_service_id: data.service,
+    calendar_capacity: data.capacity,
+    calendar_price: data.price,
   };
-  calendar = _.merge(calendar, {
-    calendar_agent_id: agentId, 
-    calendar_service_id: serviceId, 
-    // calendar_resource_id: resourceId
-  });
-  return bookshelf.knex('calendars').insert(calendar).returning('*')
+  return new Calendars(calendar).save(null, trx);
 };
 
 

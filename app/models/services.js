@@ -32,7 +32,7 @@ module.exports = function(db) {
 
 
   function moveToElasticSearch(id, model) {
-    elastic.addService(model);
+    // elastic.addService(model);
   }
 
 }

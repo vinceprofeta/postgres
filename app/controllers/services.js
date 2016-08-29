@@ -51,23 +51,26 @@ services.getById = function(id) {
 
 
 // TODO
-services.add = function(data) {
-  var id = data.resource;
-  var params = data.params;
-  // resource id - GET reource
-  var service = { 
-    service_description: "TEST service description",
-    service_type: "private",
-    service_name: "Half",
-    active: true,
-    image: "test",
-    service_capacity: 3,
-    service_duration: 30,
-    service_price: 60,
-    service_skill_id: 1
-  };
-  service = _.merge(service, {service_resource_id: id})
-  return bookshelf.knex('services').insert(service).returning('*')
+services.add = function(data, trx) {
+  trx = trx ? {transacting: trx} : {}
+  try {
+    var addObj = {
+      service_description: data.service_description,
+      service_name: data.service_name || 'todo',
+      active: data.active,
+      image: data.image,
+      service_capacity: data.service_capacity,
+      service_duration: data.service_duration,
+      service_price: data.service_price,
+      service_resource_id: data.service_resource_id,
+      service_skill_id: data.service_skill_id,
+      service_type: 'todo',
+    };
+
+    return new Services(addObj).save(null, trx);
+  } catch(err) {
+    console.log('error', err)
+  }
 };
 
 
