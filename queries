@@ -1,3 +1,20 @@
+select *
+  from calendars dc
+  inner join "calendarRecurringDay" dcd
+  on dcd.calendar_id = dc.id
+  inner join "calendarRecurringTime" dct
+  on dct.calendar_recurring_day_id = dcd.id
+  inner join "bookings" book
+  on book.booking_calendar_id = dc.id
+  where EXTRACT(DOY FROM book.start) = EXTRACT(DOY FROM TIMESTAMP '2016-09-05')
+  and dc.calendar_agent_id = 5 and dcd.dow = EXTRACT(DOW FROM TIMESTAMP '2016-09-05') and (
+    (dct.start <= TO_TIMESTAMP('16:50:00', 'HH24:MI:SS')::TIME and dct.end >= TO_TIMESTAMP('17:30:00', 'HH24:MI:SS')::TIME)
+  )
+
+
+  
+
+
 # Calendar schedule for instructor 6
 select au.first_name, au.last_name, ds.service_name, dc.calendar_service_id, dcd.dow, dct.*
 from calendars dc

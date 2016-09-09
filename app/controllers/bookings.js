@@ -64,19 +64,20 @@ bookings.getById = function(id) {
 
 
 bookings.add = function(data) {
-  var id = data.resource;
-  var params = data.params;
+  var user = data.user;
+  var params = data.calendar;
+  
   // resource id - GET reource
-  var booking = {
-    booking_calendar_id: '',
-    booking_capacity: '',
-    bookingPrice: '',
-    booking_status: '',
-    start: '',
-    end: ''
-  };
+  // var booking = {
+  //   booking_calendar_id: '',
+  //   booking_capacity: '',
+  //   bookingPrice: '',
+  //   booking_status: '',
+  //   start: '',
+  //   end: ''
+  // };
 
-  return bookshelf.knex('bookings').insert(booking).returning('*')
+  // return bookshelf.knex('bookings').insert(booking).returning('*')
 };
 
 

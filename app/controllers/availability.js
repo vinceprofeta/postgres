@@ -1,5 +1,5 @@
 'use strict';
-var BluebirdPromise = require('bluebird');
+var Promise = require('bluebird');
 var uuid = require('node-uuid');
 var moment = require('moment');
 var _ = require('lodash');
@@ -14,16 +14,109 @@ var Services = bookshelf.model('services');
 
 var availability = {};
 
+availability.setAvailability = function(userId, data) {
+  return new Promise(function(resolve, reject) {
+    try {
+      data = JSON.parse(data.availability);
+      const {calendars, times, days, interval} = data;
+      const timesSorted = sortTimes(times);
+      const input = createCalendarInputs(days, calendars);
+  
+      bookshelf.knex.transaction(function(trx) {
+        return bookshelf.knex.raw(getUsersCalendars(userId, calendars)).transacting(trx)
+        .then((ids) => {
+          ids = _.map(ids.rows, (row) => {
+            return row.id
+          })
+          const deleteQuery = getDeleteQuery(userId, days, ids);
+          return bookshelf.knex.raw(deleteQuery).transacting(trx)
+        })
+        .then((w) => {
+          return bookshelf.knex.insert(input, '*').into('calendarRecurringDay').transacting(trx)
+        })
+        .then((days) => {
+          const createdTimes = createTimeInputs(days, timesSorted)
+          return bookshelf.knex.insert(createdTimes, '*').into('calendarRecurringTime').transacting(trx)
+          .then(trx.commit)
+          .catch(trx.rollback);
+        })
+        .then(() => {
+          resolve({success: true}) /// NEEEED TO ADD CONFLICTS?
+        })
+        .catch(() => {
+          reject({error: 'Error updating availability'});
+          return;
+        })
+      });
+
+    } catch(err) {
+      reject({error: 'Error updating availability'});
+      return;
+    }
+  });
+};
+
+
 availability.getAll = function(properties) {
   var query = getQuery(properties);
   return bookshelf.knex.raw(query).then(function(w) {
     return properties.group ? _.groupBy(w.rows, 's_date') : w.rows
   })
-
 };
 
+
+availability.getIsInstructorAvailable = function(properties) {
+  var query = isUserAvailableGivenTimes(properties);
+  return bookshelf.knex.raw(query).then(function(w) {
+    return properties.group ? _.groupBy(w.rows, 's_date') : w.rows
+  })
+};
+
+
+
+
+
+// Helper Functions
+function isUserAvailableGivenTimes({agent, date, start, end}) {
+  start = moment(start, 'H:mm').format('HH:MM:SS')
+  end = moment(end, 'H:mm').format('HH:MM:SS')
+  return`select count(1)
+  from calendars dc
+  inner join "calendarRecurringDay" dcd
+  on dcd.calendar_id = dc.id
+  inner join "calendarRecurringTime" dct
+  on dct.calendar_recurring_day_id = dcd.id
+  where dc.calendar_agent_id = ${agent} and dcd.dow = EXTRACT(DOW FROM TIMESTAMP '${date}') and (
+    (dct.start > TO_TIMESTAMP('${start}', 'HH24:MI:SS')::TIME and dct.start < TO_TIMESTAMP('${end}', 'HH24:MI:SS')::TIME)
+    or 
+    (dct.end > TO_TIMESTAMP('${start}', 'HH24:MI:SS')::TIME and dct.start < TO_TIMESTAMP('${end}', 'HH24:MI:SS')::TIME)
+    or 
+    (dct.start <= TO_TIMESTAMP('${start}', 'HH24:MI:SS')::TIME and dct.end >= TO_TIMESTAMP('${end}', 'HH24:MI:SS')::TIME)
+  )`
+}
+
+
+function getUsersCalendars(userId, calendars) {
+  return`select id from calendars ca
+  where ca.id in (${calendars})
+  and calendar_agent_id = ${userId}`
+}
+
+function getDeleteQuery(userId, days, calendars) {
+  return`DELETE from "calendarRecurringDay" crd
+    WHERE crd.id IN (
+      select crd.id
+      from "calendarRecurringDay" crd
+      inner join "calendars" ca
+      on ca.id = crd.calendar_id
+      where crd.calendar_id in (${calendars})
+      and ca.calendar_agent_id = ${userId}
+      and crd.dow = any(array[${days}])
+    )`
+}
+
 function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
-  return `select ${distinct ? 'DISTINCT ON (s_date)' : ''} s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id,
+  return `select ${distinct ? 'DISTINCT ON (s_date)' : ''} s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id, au.facebook_user_id,
   dc.id as calendar_id, calendar_capacity, dcd.dow, dct.start, dct.end, s.date::timestamp::date as s_date,
   (
      select jsonb_agg(bookings)
@@ -66,7 +159,7 @@ function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
 
   union
 
-  select s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id,
+  select s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id, au.facebook_user_id,
   dc.id as calendar_id, calendar_capacity, EXTRACT(DOW FROM s.date) as dow, dcd.start::timestamp::time, dcd.end::timestamp::time, s.date::timestamp::date as s_date,
   (
      select jsonb_agg(bookings)
@@ -105,6 +198,63 @@ function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
   and dcd.available='t'
   group by dcd.id, au.id, ds.id, dcd.id, dc.id, s.date, s.a`;
 
+}
+
+
+function sortTimes(array) {
+  array = array.sort(function(a, b) {
+    a = moment(a, 'H:mm')
+    b = moment(b, 'H:mm')
+    return a.isBefore(b) ? -1 : a.isAfter(b) ? 1 : 0;
+  });
+  return groupTimes(array)
+}
+
+
+function groupTimes(times) {
+  var interval = 30;
+  return _.chain(times).reduce((result, time, i, array) => {
+    if(array[i-1]) {
+      if(moment(time, 'H:mm').diff(moment(array[i-1], 'H:mm'), 'minutes') > 30) {
+        result.push([time])
+      } else {
+        result[result.length -1].push(time)
+      }
+    } else {
+      result.push([time])
+    }
+    return result
+  }, [])
+  .map((group) => {
+    return {
+      start: group[0],
+      end: group[group.length-1]
+    }
+  }).value();
+}
+
+function createCalendarInputs(days, calendars) {
+  return _.reduce(calendars, (result, calendar, i, array) => {
+     var array = _.map(days, (day) => {
+      return {
+         calendar_id: calendar,
+         dow: day
+       }
+     })
+     result = result.concat(array)
+     return result
+  }, [])
+}
+
+function createTimeInputs(days, times) {
+  return _.reduce(days, (result, day, i, array) => {
+     times = _.cloneDeep(times);
+     var array = _.map(times, (time) => {
+      return _.merge(time, {calendar_recurring_day_id: day.id}) 
+     })
+     result = result.concat(array)
+     return result
+  }, [])
 }
 
 

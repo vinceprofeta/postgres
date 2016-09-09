@@ -20,6 +20,7 @@ var Bookings = require('../../controllers/bookings');
 var Transactions = require('../../controllers/transactions');
 var Favorites = require('../../controllers/favorites');
 var Memberships = require('../../controllers/memberships');
+var Availability = require('../../controllers/availability');
 
 router.route('/')
   .get(function(req, res) {
@@ -124,33 +125,38 @@ router.route('/bookings')
 
 router.route('/sessions/enroll')
   .put(function(req, res) {   
-    var sessions = req.body.sessions || [];
-    sessions = JSON.parse(sessions);
-    Transactions.getTransactions(req.decoded._id, 1, 0, null, null, null, true)
-    .then(function(failedTransactions) {
-      if (failedTransactions.length) {
-        res.status(422).json({error: 'outstanding failed payments, please update payment method and resolve'});
-      } else {
-        return Users.getPaymentMethod(req.decoded._id);
-      }
-    })
-    .then(function(user) {
-      if (true) { //user.paymentMethod TODO
-        if (sessions.length && sessions.length === 1) {
-          return Users.addSession(user, sessions[0], res);
-        } else {
-          return Users.mergeSessions(user, sessions, res);
-        }
-      } else {
-        res.status(422).json({"error": "No payment method"});
-      }
-    })
-    .then(function(session) {
-      res.json(session);
-    })
-    .catch(function(err) {
-      res.status(422).json(err);
-    });
+    var calendars = req.body.calendars || [];
+    calendars = JSON.parse(calendars);
+    Bookings.add({user: req.decoded._id, calendar: calendars[0]})
+    console.log(calendars)
+
+
+
+    // Transactions.getTransactions(req.decoded._id, 1, 0, null, null, null, true)
+    // .then(function(failedTransactions) {
+    //   if (failedTransactions.length) {
+    //     res.status(422).json({error: 'outstanding failed payments, please update payment method and resolve'});
+    //   } else {
+    //     return Users.getPaymentMethod(req.decoded._id);
+    //   }
+    // })
+    // .then(function(user) {
+    //   if (true) { //user.paymentMethod TODO
+    //     if (sessions.length && sessions.length === 1) {
+    //       return Users.addSession(user, sessions[0], res);
+    //     } else {
+    //       return Users.mergeSessions(user, sessions, res);
+    //     }
+    //   } else {
+    //     res.status(422).json({"error": "No payment method"});
+    //   }
+    // })
+    // .then(function(session) {
+    //   res.json(session);
+    // })
+    // .catch(function(err) {
+    //   res.status(422).json(err);
+    // });
   });
 
 
@@ -181,8 +187,6 @@ router.route('/calendars/favorites')
       res.status(422).json(err);
     });
   })
-
-
 
 
 
@@ -234,6 +238,17 @@ router.route('/calendars')
       
     }
   });
+
+
+  router.route('/availability')
+  .post(function(req, res) {
+    Availability.setAvailability(req.decoded._id, req.body)
+    .then(function(response) {
+      res.json(response);
+    });
+  });
+
+
 
 
   router.route('/listings/:id/sessions/batch')

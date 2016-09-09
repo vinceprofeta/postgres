@@ -70,6 +70,7 @@ router.route('/:id')
       return AvailabilityController.getAll(query)
     })
     .then(function(a) {
+      console.log(a)
       res.json(a);
     })
     .catch(function(err) {
