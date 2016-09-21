@@ -30,20 +30,23 @@ exports.up = function(knex, Promise) {
       table.integer('booking_percent_take').defaultTo(0);
       table.integer('booking_flat_fee_take').defaultTo(0);
       table.string('description', 500);
-      table.specificType('point', 'geometry(point, 4326)').notNullable().unique();
       table.integer('cancellation_policy_percent_take').defaultTo(0).notNullable();
       table.integer('cancellation_policy_flat_fee_take').defaultTo(0).notNullable();
       table.integer('cancellation_policy_window').defaultTo(0);
-      table.string('street_address').notNullable().unique();
-      table.string('city').notNullable();
-      table.string('state').notNullable();
-      table.integer('zipcode').notNullable();
-      table.string('phone').notNullable();
-      table.string('email').notNullable();
-      table.string('website').notNullable();
+
       table.string('timezone').notNullable();
       table.boolean('require_membership').defaultTo(false);
       table.timestamp('delete_date')
+
+      table.specificType('point', 'geometry(point, 4326)');
+      table.string('street_address').unique();
+      table.string('city');
+      table.string('state');
+      table.integer('zipcode');
+      table.string('phone');
+      table.string('email');
+      table.string('website');
+      
       table.timestamps()
 
     }),
@@ -69,6 +72,7 @@ exports.up = function(knex, Promise) {
 
       // serviceName needs to be uniqe based on resource 
       table.integer('service_skill_id').references('skills.id').notNullable(); // REMOVEABLE
+      table.boolean('approved').notNullable().defaultTo(false) // REMOVEABLE
     }),
 
     // ________________________________________________________
@@ -83,6 +87,18 @@ exports.up = function(knex, Promise) {
       table.timestamp('delete_date')
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());    
+    }),
+
+    // ________________________________________________________
+
+    knex.schema.createTable('tags', function(table) {
+      table.increments();
+      table.string('title').notNullable()
+      table.integer('reference_calendar_id').references('calendars.id');
+      table.integer('reference_resource_id').references('resources.id');
+      table.integer('reference_user_id').references('users.id');
+      table.integer('reference_service_id').references('services.id');
+      table.integer('reference_event_id').references('events.id');
     }),
 
 

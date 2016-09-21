@@ -96,7 +96,7 @@ router.route('/:id/services/availability')
 
 
 
-router.route('/enroll')
+router.route('/enroll-as-resource')
   .post(function(req, res) {
     
     ResourcesController.addWithServiceMembershipCalendar(1, resource, service).then(function(response) {
