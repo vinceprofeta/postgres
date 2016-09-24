@@ -74,7 +74,7 @@ exports.up = function(knex, Promise) {
       table.integer('service_skill_id').references('skills.id').notNullable(); // REMOVEABLE
       table.boolean('approved').notNullable().defaultTo(false) // REMOVEABLE
       table.jsonb('equipment'); // REMOVEABLE
-      table.specificType('skill_level', 'jsonb[]').notNullable(); // REMOVEABLE
+      table.jsonb('skill_level'); // REMOVEABLE
     }),
 
     // ________________________________________________________
@@ -404,7 +404,7 @@ exports.up = function(knex, Promise) {
     knex.schema.createTable('skillsToCategories', function(table) { // REMOVEABLE
       table.increments();
       table.integer('skill_category').references('skillCategories.id').notNullable();
-      table.integer('skill').references('skill.id').notNullable();
+      table.integer('skill').references('skills.id').notNullable();
     })
 
 

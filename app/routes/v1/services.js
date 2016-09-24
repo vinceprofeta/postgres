@@ -96,48 +96,5 @@ router.route('/:id/services/availability')
 
 
 
-router.route('/enroll-as-resource')
-  .post(function(req, res) {
-    
-    ResourcesController.addWithServiceMembershipCalendar(1, resource, service).then(function(response) {
-      res.json(response);
-    })
-    .catch(function(err) {
-      console.log(err)
-      res.status(422).json(err);
-    })
-  });
-
-  var resource = {
-  name: 'd4ddad HIPs S23d4POT',
-  app_fee_flat_fee_take: 0,
-  booking_flat_fee_take: 0,
-  description: 'This is a sample',
-  point: st.geomFromText('Point(-86.3332343 41.32333324)', 4326),
-  cancellation_policy_percent_take: 0,
-  cancellation_policy_flat_fee_take: 0,
-  cancellation_policy_window: 24,
-  street_address: 'ee222323332333e2333wr red river',
-  city: 'Cleveland',
-  state: 'OH',
-  zipcode: 44094,
-  phone: '440-444-4444',
-  email: 'vprofeta12@gmail.com',
-  website: 'www.google.com',
-}
-
-var service = {
-  service_description: 'serv4dice description',
-  // service_resource_id: resource,
-  service_type: 'private',
-  service_name: 'Privates',
-  active: true,
-  image: 'test',
-  service_capacity: 3,
-  service_duration: 30,
-  service_price: 60,
-  service_skill_id: 1
-}
-
 
 module.exports = router;

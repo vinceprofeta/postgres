@@ -22,6 +22,8 @@ var Favorites = require('../../controllers/favorites');
 var Memberships = require('../../controllers/memberships');
 var Availability = require('../../controllers/availability');
 
+var ResourcesController = require('../../controllers/resources');
+
 router.route('/')
   .get(function(req, res) {
     // console.log(req.decoded)
@@ -64,9 +66,9 @@ router.route('/')
     Conversations
       .getConversationsForUser(req.decoded._id)
       .then(function(conversations) {
-        console.log(conversations.toJSON())
         if (!_.get(conversations, 'length')) {
           res.status(404).json({error: 'no conversations found'});
+          return;
         }
         res.json(conversations);
       })
@@ -264,5 +266,20 @@ router.route('/calendars')
       res.json(response);
     });
   });
+
+
+
+
+  router.route('/enroll-as-resource')
+  .post(function(req, res) {
+    ResourcesController.addWithServiceMembershipCalendar(req.decoded._id, resource, service).then(function(response) {
+      res.json(response);
+    })
+    .catch(function(err) {
+      console.log(err)
+      res.status(422).json(err);
+    })
+  });
+
 
 module.exports = router;

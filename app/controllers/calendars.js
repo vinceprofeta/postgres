@@ -61,7 +61,7 @@ calendars.getPopularCalendars = function(query) {
 
 calendars.getById = function(id) {
   return Calendars.where('id', id).fetch({
-    withRelated: ['service', 'agent'],
+    withRelated: ['service', 'agent', 'service.skill'],
   })
 };
 

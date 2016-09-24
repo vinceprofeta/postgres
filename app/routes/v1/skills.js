@@ -40,6 +40,28 @@ router.route('/popular')
     })
   });
 
+router.route('/categories')
+  .post(function(req, res) {
+    SkillsController.addCategory(req.body)
+    .then(function(skills) {
+      res.json(skills);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  })
+  .get(function(req, res) {
+    SkillsController.getAllCategories(req.query)
+    .then(function(skills) {
+      res.json(skills);
+    })
+    .catch(function(err) {
+      res.status(422).json(err);
+    })
+  });
+
+
+
 router.route('/:id')
   .get(function(req, res) {
     SkillsController.getById(req.params.id)
@@ -59,6 +81,8 @@ router.route('/:id')
       res.status(422).json(err);
     })
   });
+
+
 
 
 

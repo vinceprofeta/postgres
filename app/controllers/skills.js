@@ -6,20 +6,44 @@ var _ = require('lodash');
 
 var bookshelf = require('../../db/bookshelf');
 var Skills = bookshelf.model('skills');
+var SkillCategories = bookshelf.model('skillCategories');
+var skillsToCategories = bookshelf.model('skillsToCategories');
 
 var skills = {};
 
 skills.getAll = function(limit, offset) {
-  return Skills.fetchAll({})
+  // return skillsToCategories.fetchAll({
+  //   withRelated: ["skill", "category"],
+  // })
+
+  return bookshelf.knex.raw(`
+    select sk.*, sc.name as category
+    from "skillsToCategories" stc
+    inner join skills sk
+    on sk.id = stc.skill
+    inner join "skillCategories" sc
+    on sc.id = stc.skill_category
+  `).then((result) => {
+    return result.rows;
+  })
+
+  // return Skills.fetchAll({})
 };
+
+
 
 skills.getPopular = function(id) {
   return Skills.fetchAll({}) //Skills.where('rank', 1).fetchAll({})
 };
 
+
+
+
 skills.getById = function(id) {
   return Skills.where('id', id).fetchAll({})
 };
+
+
 
 skills.updateById = function(id, params) {
   var updatedObj = {};
@@ -42,7 +66,6 @@ skills.updateById = function(id, params) {
 };
 
 skills.add = function(params) {
-  console.log(params)
   var skill = { 
     description: params.description,
     name: params.name,
@@ -50,6 +73,15 @@ skills.add = function(params) {
   };
 
   return bookshelf.knex('skills').insert(skill).returning('*')
+};
+
+
+skills.getAllCategories = function(limit, offset) {
+  return SkillCategories.fetchAll({})
+};
+
+skills.addCategory = function(params) {
+ console.log('TODO')
 };
 
 

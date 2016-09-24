@@ -170,7 +170,8 @@ resources.getMembers = function(id, query, role) {
 };
 
 
-resources.addWithServiceMembershipCalendar = function(user, resource, service) {
+resources.addWithServiceMembershipCalendar = function(user, r, s) {
+  const {resource, service} = formatResourceAndService(user, r, s)
   return new BluebirdPromise(function(resolve, reject) {
     bookshelf.knex.transaction(function(trx) {
       
@@ -216,9 +217,6 @@ resources.addWithServiceMembershipCalendar = function(user, resource, service) {
         });
       })
 
-
-
-
       .then(trx.commit)
       .catch(trx.rollback);
     })
@@ -233,6 +231,45 @@ resources.addWithServiceMembershipCalendar = function(user, resource, service) {
 
   return bookshelf.knex('resources').insert(resource).returning('*')
 };
+
+
+function formatResourceAndService(user, resource, service) {
+   resource = {
+    name: resource.name || 'instructor',
+    app_fee_flat_fee_take: 0,
+    booking_flat_fee_take: 0,
+    description: resource.description || 'description',
+    point: st.geomFromText(`Point(${resource.long} ${resource.lat})`, 4326),
+    cancellation_policy_percent_take: 0,
+    cancellation_policy_flat_fee_take: 0,
+    cancellation_policy_window: 0,
+    street_address: resource.street,
+    city: resource.city,
+    state: resource.state,
+    zipcode: resource.zipcode,
+    phone: resource.phone,
+    email: resource.email,
+    website: resource.website,
+  }
+
+  service = {
+    service_description: service.description || 'no description',
+    service_type: service.description || 'type',
+    service_name: service.name,
+    active: false,
+    image: service.image || 'test',
+    service_capacity: service.capacity || 1,
+    service_duration: service.duration || 30,
+    service_price: service.price || 500,
+    service_skill_id: service.skill,
+    equipment: service.equipment,
+    skill_level: service.skill_level
+  }
+  return {
+    service,
+    resource
+  }
+}
 
 
 

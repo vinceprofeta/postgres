@@ -68,6 +68,14 @@ var user4;
 var conversation;
 var conversation2;
 var skill1;
+var skill2;
+var skill3;
+
+var skillCategorie1;
+var skillCategorie2;
+var skillCategorie3;
+
+
 exports.seed = function(knex, Promise) {
     return Promise.join(
             knex('calendarScheduleOverride').del(),
@@ -82,13 +90,41 @@ exports.seed = function(knex, Promise) {
             knex('usersConversations').del(),
             knex('conversations').del(),
             knex('chats').del(),
+            knex('skillCategories').del(),
+            knex('skillsToCategories').del(),
             knex('skills').del(),
             knex('users').del()
         )
 
         // SKILLS
+        .then(function(ids) {
+            return Promise.join(
+                knex('skillCategories').insert({
+                  name: 'Sports',
+                }).returning('id')
+            );
+        })
+        .then(function(ids) {
+            skillCategorie1= ids[0][0];
+            return Promise.join(
+                knex('skillCategories').insert({
+                  name: 'Music',
+                }).returning('id')
+            );
+        })
+
 
         .then(function(ids) {
+            skillCategorie2= ids[0][0];
+            return Promise.join(
+                knex('skillCategories').insert({
+                  name: 'Education'
+                }).returning('id')
+            );
+        })
+
+        .then(function(ids) {
+            skillCategorie3= ids[0][0];
             return Promise.join(
                 knex('skills').insert({
                   name: 'Soccer',
@@ -98,12 +134,12 @@ exports.seed = function(knex, Promise) {
                 }).returning('id')
             );
         })
+
         .then(function(ids) {
             skill1 = ids[0][0];
-            console.log(skill1)
             return Promise.join(
                 knex('skills').insert({
-                  name: 'Science',
+                  name: 'Math',
                   rank: 2,
                   image: 'https://images.unsplash.com/photo-1453733190371-0a9bedd82893?crop=entropy&fit=crop&fm=jpg&ixjsv=2.1.0&ixlib=rb-0.3.5&q=80&w=400',
                   description: 'Science problems'
@@ -111,12 +147,40 @@ exports.seed = function(knex, Promise) {
             );
         })
         .then(function(ids) {
+            skill2 = ids[0][0];
             return Promise.join(
                 knex('skills').insert({
                   name: 'Guitar',
                   rank: 3,
                   image: 'https://images.unsplash.com/photo-1459305272254-33a7d593a851?crop=entropy&fit=crop&fm=jpg&h=275&ixjsv=2.1.0&ixlib=rb-0.3.5&q=80&w=400',
                   description: 'Guitar drills'
+                }).returning('id')
+            );
+        })
+
+
+        .then(function(ids) {
+            skill3 = ids[0][0];
+            return Promise.join(
+                knex('skillsToCategories').insert({
+                  skill_category: skillCategorie1,
+                  skill: skill1
+                }).returning('id')
+            );
+        })
+        .then(function(ids) {
+            return Promise.join(
+                knex('skillsToCategories').insert({
+                  skill_category: skillCategorie2,
+                  skill: skill3
+                }).returning('id')
+            );
+        })
+        .then(function(ids) {
+            return Promise.join(
+                knex('skillsToCategories').insert({
+                  skill_category: skillCategorie3,
+                  skill: skill2
                 }).returning('id')
             );
         })
@@ -276,7 +340,10 @@ exports.seed = function(knex, Promise) {
                     service_capacity: 3,
                     service_duration: 30,
                     service_price: 60,
-                    service_skill_id: skill1
+                    service_skill_id: skill1,
+                    skill_level: {
+                      "beginner": true
+                    }
                 }).returning('id')
             );
         })
@@ -310,7 +377,10 @@ exports.seed = function(knex, Promise) {
                     service_capacity: 3,
                     service_duration: 30,
                     service_price: 60,
-                    service_skill_id: skill1
+                    service_skill_id: skill1,
+                    skill_level: {
+                      "beginner": true
+                    }
                 }).returning('id')
             );
         })
@@ -327,7 +397,10 @@ exports.seed = function(knex, Promise) {
                     service_capacity: 3,
                     service_duration: 30,
                     service_price: 60,
-                    service_skill_id: skill1
+                    service_skill_id: skill1,
+                    skill_level: {
+                      "beginner": true
+                    }
                 }).returning('id')
             );
         })

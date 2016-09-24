@@ -74,7 +74,7 @@ exports.up = function(knex, Promise) {
       table.integer('service_skill_id').references('skills.id').notNullable(); // REMOVEABLE
       table.boolean('approved').notNullable().defaultTo(false) // REMOVEABLE
       table.jsonb('equipment'); // REMOVEABLE
-      table.specificType('skill_level', 'jsonb[]').notNullable(); // REMOVEABLE
+      table.jsonb('skill_level'); // REMOVEABLE
     }),
 
     // ________________________________________________________
@@ -93,15 +93,15 @@ exports.up = function(knex, Promise) {
 
     // ________________________________________________________
 
-    knex.schema.createTable('tags', function(table) {
-      table.increments();
-      table.string('title').notNullable()
-      table.integer('reference_calendar_id').references('calendars.id');
-      table.integer('reference_resource_id').references('resources.id');
-      table.integer('reference_user_id').references('users.id');
-      table.integer('reference_service_id').references('services.id');
-      table.integer('reference_event_id').references('events.id');
-    }),
+    // knex.schema.createTable('tags', function(table) {
+    //   table.increments();
+    //   table.string('title').notNullable()
+    //   table.integer('reference_calendar_id').references('calendars.id');
+    //   table.integer('reference_resource_id').references('resources.id');
+    //   table.integer('reference_user_id').references('users.id');
+    //   table.integer('reference_service_id').references('services.id');
+    //   table.integer('reference_event_id').references('events.id');
+    // }),
 
 
     // ________________________________________________________
@@ -404,7 +404,7 @@ exports.up = function(knex, Promise) {
     knex.schema.createTable('skillsToCategories', function(table) { // REMOVEABLE
       table.increments();
       table.integer('skill_category').references('skillCategories.id').notNullable();
-      table.integer('skill').references('skill.id').notNullable();
+      table.integer('skill').references('skills.id').notNullable();
     })
 
 

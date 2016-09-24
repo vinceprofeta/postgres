@@ -57,9 +57,9 @@ rooms.getByUsersInConversation = function(userIds) {
         resolve(conversation)
       }
     })
-    .then(function(conversation) {
-      resolve(conversation)
-    })
+    // .then(function(conversation) {
+    //   resolve(conversation)
+    // })
     .catch(function(err) {
       reject(err)
     })
