@@ -203,43 +203,43 @@ router.route('/calendars')
     });
   })
 
-  router.route('/services/add')
-  .post(function(req, res) {
-    var service;
-    if (req.body.service) {
-      try {
-        service = JSON.parse(req.body.service);
-      } catch(err) {
-        res.status(422).json({error: 'invalid format'});
-        return;
-      } 
-      bookshelf.knex.transaction(function(trx) {     
-        return bookshelf.knex('memberships').transacting(trx).where({membership_user_id: req.decoded._id, default: true})
-        .then((m) => {
-          m = _.get(m, '[0]');
-          if (!m) { throw new Error({error: 'no membership found'}) };
-          service.service_resource_id = m.membership_resource_id;
-          return Services.add(service, trx)
-        })
-        .then(function(response) {
-          return Calendars.add({
-            agent: req.decoded._id,
-            service: response.id
-          }, trx)
-        })
-        .then(function(response) {
-          trx.commit
-          res.json({success: true});
-        })
-        .catch(function(err) {
-          console.log(err)
-          trx.rollback
-          res.status(422).json(err);
-        });
-      });
+  // router.route('/services/add')
+  // .post(function(req, res) {
+  //   var service;
+  //   if (req.body.service) {
+  //     try {
+  //       service = JSON.parse(req.body.service);
+  //     } catch(err) {
+  //       res.status(422).json({error: 'invalid format'});
+  //       return;
+  //     } 
+  //     bookshelf.knex.transaction(function(trx) {     
+  //       return bookshelf.knex('memberships').transacting(trx).where({membership_user_id: req.decoded._id, default: true})
+  //       .then((m) => {
+  //         m = _.get(m, '[0]');
+  //         if (!m) { throw new Error({error: 'no membership found'}) };
+  //         service.service_resource_id = m.membership_resource_id;
+  //         return Services.add(service, trx)
+  //       })
+  //       .then(function(response) {
+  //         return Calendars.add({
+  //           agent: req.decoded._id,
+  //           service: response.id
+  //         }, trx)
+  //       })
+  //       .then(function(response) {
+  //         trx.commit
+  //         res.json({success: true});
+  //       })
+  //       .catch(function(err) {
+  //         console.log(err)
+  //         trx.rollback
+  //         res.status(422).json(err);
+  //       });
+  //     });
       
-    }
-  });
+  //   }
+  // });
 
 
   router.route('/availability')
@@ -270,15 +270,27 @@ router.route('/calendars')
 
 
 
-  router.route('/enroll-as-resource')
+  router.route('/services/add')
   .post(function(req, res) {
-    ResourcesController.addWithServiceMembershipCalendar(req.decoded._id, resource, service).then(function(response) {
-      res.json(response);
-    })
-    .catch(function(err) {
+    let data = {};
+    try {
+      data = JSON.parse(req.body.data);
+    } catch(err) {
       console.log(err)
       res.status(422).json(err);
-    })
+    }
+
+    if (data.resource) {
+      ResourcesController.addWithServiceMembershipCalendar(req.decoded._id, data.resource, data.service).then(function(response) {
+        res.json(response);
+      })
+      .catch(function(err) {
+        console.log(err)
+        res.status(422).json(err);
+      })
+    } else {
+
+    }
   });
 
 

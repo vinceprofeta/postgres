@@ -171,7 +171,7 @@ resources.getMembers = function(id, query, role) {
 
 
 resources.addWithServiceMembershipCalendar = function(user, r, s) {
-  const {resource, service} = formatResourceAndService(user, r, s)
+  const {resource, service} = formatResourceAndService(user, r, s);
   return new BluebirdPromise(function(resolve, reject) {
     bookshelf.knex.transaction(function(trx) {
       
@@ -235,11 +235,11 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
 
 function formatResourceAndService(user, resource, service) {
    resource = {
-    name: resource.name || 'instructor',
+    resourceName: resource.name || 'instructor',
     app_fee_flat_fee_take: 0,
     booking_flat_fee_take: 0,
     description: resource.description || 'description',
-    point: st.geomFromText(`Point(${resource.long} ${resource.lat})`, 4326),
+    point: resource.long && resource.lat ? st.geomFromText(`Point(${resource.long} ${resource.lat})`, 4326) : null,
     cancellation_policy_percent_take: 0,
     cancellation_policy_flat_fee_take: 0,
     cancellation_policy_window: 0,
@@ -250,6 +250,7 @@ function formatResourceAndService(user, resource, service) {
     phone: resource.phone,
     email: resource.email,
     website: resource.website,
+    timezone: 'test'
   }
 
   service = {
@@ -258,11 +259,11 @@ function formatResourceAndService(user, resource, service) {
     service_name: service.name,
     active: false,
     image: service.image || 'test',
-    service_capacity: service.capacity || 1,
+    service_capacity: service.capacity ? Number(service.capacity) : 1,
     service_duration: service.duration || 30,
     service_price: service.price || 500,
     service_skill_id: service.skill,
-    equipment: service.equipment,
+    equipment: JSON.stringify(service.equipment),
     skill_level: service.skill_level
   }
   return {

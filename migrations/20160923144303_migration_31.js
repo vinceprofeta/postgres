@@ -39,7 +39,7 @@ exports.up = function(knex, Promise) {
       table.timestamp('delete_date')
 
       table.specificType('point', 'geometry(point, 4326)');
-      table.string('street_address').unique();
+      table.string('street_address');
       table.string('city');
       table.string('state');
       table.integer('zipcode');
