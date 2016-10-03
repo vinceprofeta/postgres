@@ -3,6 +3,7 @@
 var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
+var bookshelf = require('../../db/bookshelf');
 
 // -- How to use
 // var hasRole = require('roleMiddleare');
@@ -49,6 +50,18 @@ function hasRole(role, roleTwo) {
     };
 
   };
+}
+
+
+function fetchMemberships() {
+   return bookshelf.knex('memberships')
+    .join('roles', 'roles.id', '=', 'memberships.membership_role_id')
+    .where('membership_user_id',  Number(5))
+    .andWhere('role_name', 'resource-admin')
+    .select('*')
+    .then(function(membership) {
+      console.log(membership)
+    });
 }
 
 module.exports = hasRole;

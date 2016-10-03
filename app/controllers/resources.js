@@ -3,14 +3,19 @@ var BluebirdPromise = require('bluebird');
 var uuid = require('node-uuid');
 var moment = require('moment');
 var _ = require('lodash');
+var formatServiceAndResource = require('../utils/formatServiceAndResource.js');
 
 var bookshelf = require('../../db/bookshelf');
+var knex = require('../../db/knex');
+var st = require('knex-postgis')(knex);
+
 var Resources = bookshelf.model('resources');
 var Memberships = bookshelf.model('memberships');
 var Users = bookshelf.model('users');
 var Calendars = bookshelf.model('calendars');
 var Services = bookshelf.model('services');
 // var Roles = bookshelf.model('memberships');
+
 
 var resources = {};
 
@@ -171,7 +176,7 @@ resources.getMembers = function(id, query, role) {
 
 
 resources.addWithServiceMembershipCalendar = function(user, r, s) {
-  const {resource, service} = formatResourceAndService(user, r, s);
+  const {resource, service} = formatServiceAndResource(user, s, r);
   return new BluebirdPromise(function(resolve, reject) {
     bookshelf.knex.transaction(function(trx) {
       
@@ -184,10 +189,11 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
           
           service.service_resource_id = resourceAdded;
           service.service_skill_id = _.get(skill, '[0].id');
+          service.image = service.image || _.get(skill, '[0].image');
 
           return new Services(service).save(null, {transacting: trx})
           .then(function(serviceAdded) { 
-            serviceAdded = _.get(serviceAdded, 'attributes.id');
+            serviceAdded = _.get(serviceAdded, 'attributes');
 
             return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id')
             .then(function(role) {
@@ -198,16 +204,16 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
                 status: 'approved',
                 membership_resource_id: Number(resourceAdded),
                 membership_user_id: Number(user),
-                membership_service_id: Number(serviceAdded)
+                // membership_service_id: Number(serviceAdded.id)
               }).returning('*')
               .then(function(membership) {
                 var calendar = {
                   calendar_agent_id: Number(user), 
-                  calendar_service_id: Number(serviceAdded), 
+                  calendar_service_id: Number(serviceAdded.id), 
                   // calendar_resource_id: Number(resourceAdded),
-                  point: resource.point,
-                  calendar_capacity: 1, //REMOVEABLE
-                  calendar_price: 100 // REMOVEABLE
+                  point: service.point || resource.point,
+                  calendar_capacity: service.capacity, //REMOVEABLE
+                  calendar_price: service.price // REMOVEABLE
                 } 
                 return new Calendars(calendar).save(null, {transacting: trx});
               })
@@ -232,45 +238,6 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
   return bookshelf.knex('resources').insert(resource).returning('*')
 };
 
-
-function formatResourceAndService(user, resource, service) {
-   resource = {
-    resourceName: resource.name || 'instructor',
-    app_fee_flat_fee_take: 0,
-    booking_flat_fee_take: 0,
-    description: resource.description || 'description',
-    point: resource.long && resource.lat ? st.geomFromText(`Point(${resource.long} ${resource.lat})`, 4326) : null,
-    cancellation_policy_percent_take: 0,
-    cancellation_policy_flat_fee_take: 0,
-    cancellation_policy_window: 0,
-    street_address: resource.street,
-    city: resource.city,
-    state: resource.state,
-    zipcode: resource.zipcode,
-    phone: resource.phone,
-    email: resource.email,
-    website: resource.website,
-    timezone: 'test'
-  }
-
-  service = {
-    service_description: service.description || 'no description',
-    service_type: service.description || 'type',
-    service_name: service.name,
-    active: false,
-    image: service.image || 'test',
-    service_capacity: service.capacity ? Number(service.capacity) : 1,
-    service_duration: service.duration || 30,
-    service_price: service.price || 500,
-    service_skill_id: service.skill,
-    equipment: JSON.stringify(service.equipment),
-    skill_level: service.skill_level
-  }
-  return {
-    service,
-    resource
-  }
-}
 
 
 

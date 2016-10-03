@@ -3,6 +3,9 @@
 var BluebirdPromise = require('bluebird');
 var _ = require('lodash');
 
+var knex = require('../../db/knex');
+var st = require('knex-postgis')(knex);
+
 var bookshelf = require('../../db/bookshelf');
 var Calendars = bookshelf.model('calendars');
 var Services = bookshelf.model('services');
@@ -23,7 +26,7 @@ calendars.getCalendars = function(query) {
   };
 
   return Calendars.where(_.pickBy(queryObject, _.identity)).fetchAll({
-    withRelated: ['agent', 'service'], //'resource', 'service'
+    withRelated: ['agent', 'service', 'service.skill'], //'resource', 'service'
   })
   // .limit(query.limit || 10)
   // .skip(query.offset || 0)
@@ -61,7 +64,9 @@ calendars.getPopularCalendars = function(query) {
 
 calendars.getById = function(id) {
   return Calendars.where('id', id).fetch({
-    withRelated: ['service', 'agent', 'service.skill'],
+    withRelated: ['service.skill', 'agent', {service: function(qb) {
+      qb.select('*', st.x(st.centroid('point')).as('x'), st.y(st.centroid('point')).as('y'));
+    }}], //'resource', 'service'
   })
 };
 
@@ -107,45 +112,6 @@ calendars.updateById = function(id, params) {
 
 
 
-
-
-//   return calendars.getById(listingId)
-//   .then(function(listing) {
-//     var addedSessions = _.map(times, function(time) {
-//       return createSession({
-//         times: time,
-//         listing: listing
-//       })
-//     });
-//     console.log(addedSessions)
-//     return Sessions.create(addedSessions, function (err, addedSession) {
-//       if (err) { throw err }
-//       return addedSession;
-//     });
-//   })
-//   .catch(function() {
-//     throw new Error({error: 'listing not found', code: 404})
-//   })
-// };
-
-
-// function createSession(obj) {
-//   listing = listing || {};
-//   var times = _.get(obj, 'times', {})
-//   var listing = _.get(obj, 'listing', {})
-  
-//   return new Sessions({
-//     notes: '',
-//     dateAndTime: times.dateAndTime,
-//     date:  times.date,
-//     time: {
-//     start: times.time,
-//     end: moment(times.time, 'H:mm').add(listing.duration || 30, 'minutes').format('H:mm')
-//     },      
-//     enrolled: [],
-//     listing: listing._id
-//   });
-// }
 
 
 

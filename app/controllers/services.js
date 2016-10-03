@@ -8,9 +8,11 @@ var BluebirdPromise = require('bluebird');
 var uuid = require('node-uuid');
 var moment = require('moment');
 var _ = require('lodash');
+var formatServiceAndResource = require('../utils/formatServiceAndResource');
 
 var bookshelf = require('../../db/bookshelf');
 var Services = bookshelf.model('services');
+var Calendars = bookshelf.model('calendars');
 // var Roles //= require('../models/roles');
 
 var services = {};
@@ -113,6 +115,53 @@ services.updateById = function(id, params) {
   .where('id', '=', id)
   .update(updatedObj)
 };
+
+
+
+services.addService = function(user, s, resourceId) {
+  const {service} = formatServiceAndResource(user, s);
+  return new BluebirdPromise(function(resolve, reject) {
+    bookshelf.knex.transaction(function(trx) {
+      return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id').then(function(role) {
+        role = _.get(role, '[0].id');
+        if (!role) { throw new Error({error: 'role does not exist'})}
+        return bookshelf.knex('memberships').transacting(trx).where({membership_role_id: role, membership_user_id: Number(user)}).returning('id').then(function(membership) {
+          if (!membership) { throw new Error({error: 'membership does not exist'})}
+          membership = _.get(membership, '[0].id');
+          return bookshelf.knex('skills').transacting(trx).where('id', '=', service.service_skill_id).then(function(skill) {
+            service.service_resource_id = Number(resourceId);
+            service.service_skill_id = _.get(skill, '[0].id');
+            service.image = service.image || _.get(skill, '[0].image');
+
+            return new Services(service).save(null, {transacting: trx}).then(function(serviceAdded) { 
+              serviceAdded = _.get(serviceAdded, 'attributes');
+
+              var calendar = {
+                calendar_agent_id: Number(user), 
+                calendar_service_id: Number(serviceAdded.id), 
+                // calendar_resource_id: Number(resourceAdded),
+                point: service.point || resource.point,
+                calendar_capacity: service.capacity, //REMOVEABLE
+                calendar_price: service.price // REMOVEABLE
+              } 
+              return new Calendars(calendar).save(null, {transacting: trx});
+            });
+
+          });
+      })
+      .then(trx.commit)
+      .catch(trx.rollback);
+      })
+      .then(function(resp) {
+        resolve({success: true})
+      })
+      .catch(function(err) {
+        // console.log(err)
+        reject({error: err})
+      });
+    }); 
+  });
+}
 
 
 

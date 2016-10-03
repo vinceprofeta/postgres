@@ -24,13 +24,12 @@ memberships.getAll = function(limit, offset) {
     // });
 };
 
-memberships.getMemberships = function(query, trx) {
+memberships.getMemberships = function(query) {
   query = query || {}
   var  queryObject = {
     membership_user_id: query.user,
     service_resource_id: query.resource
   };
-
   return Memberships.where(_.pickBy(queryObject, _.identity)).fetchAll({
     withRelated: ['user', 'role'],
   })

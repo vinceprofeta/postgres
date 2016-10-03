@@ -203,44 +203,6 @@ router.route('/calendars')
     });
   })
 
-  // router.route('/services/add')
-  // .post(function(req, res) {
-  //   var service;
-  //   if (req.body.service) {
-  //     try {
-  //       service = JSON.parse(req.body.service);
-  //     } catch(err) {
-  //       res.status(422).json({error: 'invalid format'});
-  //       return;
-  //     } 
-  //     bookshelf.knex.transaction(function(trx) {     
-  //       return bookshelf.knex('memberships').transacting(trx).where({membership_user_id: req.decoded._id, default: true})
-  //       .then((m) => {
-  //         m = _.get(m, '[0]');
-  //         if (!m) { throw new Error({error: 'no membership found'}) };
-  //         service.service_resource_id = m.membership_resource_id;
-  //         return Services.add(service, trx)
-  //       })
-  //       .then(function(response) {
-  //         return Calendars.add({
-  //           agent: req.decoded._id,
-  //           service: response.id
-  //         }, trx)
-  //       })
-  //       .then(function(response) {
-  //         trx.commit
-  //         res.json({success: true});
-  //       })
-  //       .catch(function(err) {
-  //         console.log(err)
-  //         trx.rollback
-  //         res.status(422).json(err);
-  //       });
-  //     });
-      
-  //   }
-  // });
-
 
   router.route('/availability')
   .post(function(req, res) {
@@ -280,16 +242,46 @@ router.route('/calendars')
       res.status(422).json(err);
     }
 
-    if (data.resource) {
-      ResourcesController.addWithServiceMembershipCalendar(req.decoded._id, data.resource, data.service).then(function(response) {
-        res.json(response);
+    if (data.service) {
+      bookshelf.knex('memberships')
+      .join('roles', 'roles.id', '=', 'memberships.membership_role_id')
+      .where('membership_user_id',  Number(req.decoded._id))
+      .andWhere('role_name', 'resource-admin')
+      .select('*')
+      .then(function(membership) {
+        membership = _.get(membership, '[0]');
+        if (!membership) {
+          if (!data.resource) {
+            throw new Error('resource must be included');
+          };
+          ResourcesController.addWithServiceMembershipCalendar(req.decoded._id, data.resource, data.service)
+          .then(function(response) {
+            res.json(response);
+          })
+          .catch(function(err) {
+            console.log(err)
+            res.status(422).json(err);
+          })
+        } else {
+          Services.addService(req.decoded._id, data.service, membership.membership_resource_id)
+          .then(function(response) {
+            res.json(response);
+          })
+          .catch(function(err) {
+            console.log(err)
+            res.status(422).json(err);
+          })
+        }
+
       })
       .catch(function(err) {
         console.log(err)
         res.status(422).json(err);
       })
-    } else {
 
+    } else {
+      console.log('error missing data')
+      res.status(422).json();
     }
   });
 
