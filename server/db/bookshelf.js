@@ -2,7 +2,14 @@ var knex = require('./knex')
 var Bookshelf = require('bookshelf')(knex);
 var fs = require('fs');
 
-var models = fs.readdirSync('app/models')
+var models = fs.readdirSync('server/app/models')
+try {
+  models = fs.readdirSync('server/app/models')
+} catch(err) {}
+
+if (!models) {
+  models = fs.readdirSync('dist/app/models')
+}
 
 Bookshelf.plugin('visibility');
 Bookshelf.plugin('registry');

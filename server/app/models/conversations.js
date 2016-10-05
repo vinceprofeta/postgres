@@ -10,7 +10,10 @@ module.exports = function(db) {
     },
     chats: function() {
       return this.hasMany('chats', 'chat_conversation_id');
-    }
+    },
+    last_message: function() {
+      return this.belongsTo('chats', 'last_message');
+    },
   });
 
   return db.model('conversations', Conversations)

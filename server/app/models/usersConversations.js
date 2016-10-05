@@ -9,7 +9,7 @@ module.exports = function(db) {
       return this.belongsTo('conversations');
     },
     user: function() {
-      return this.hasOne('users', 'id');
+      return this.belongsTo('users', 'conversation_user_id');
     }
   });
 

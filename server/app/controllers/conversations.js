@@ -36,7 +36,15 @@ rooms.getById = function(id) {
 
 rooms.getByUsersInConversation = function(userIds) {
   return new BluebirdPromise(function(resolve, reject) {
-    var ids = JSON.parse(userIds);
+    var ids; 
+    try {
+      ids = JSON.parse(userIds);
+      if (ids.length < 2) {
+        reject('invalid post')
+      }
+    } catch(err) {
+      reject('invalid post')
+    }
    
     bookshelf.knex('usersConversations').select('conversation_id')
     .whereIn('conversation_user_id', ids)
@@ -51,15 +59,15 @@ rooms.getByUsersInConversation = function(userIds) {
           return bookshelf.knex('usersConversations').select('conversation_id')
           .whereIn('conversation_user_id', ids)
           .groupBy('conversation_id').havingRaw('count(*) = ?', [ids.length])
+          .then(function(conversation) {
+            resolve(conversation[0])
+          })
         })
       }
       else {
-        resolve(conversation)
+        resolve(conversation[0])
       }
     })
-    // .then(function(conversation) {
-    //   resolve(conversation)
-    // })
     .catch(function(err) {
       reject(err)
     })
@@ -68,10 +76,7 @@ rooms.getByUsersInConversation = function(userIds) {
 
 rooms.getConversationsForUser = function(id) {
   return UsersConversations.where('conversation_user_id', id).fetchAll({
-    withRelated: [{'conversation.users.user': function(qb) {
-      // qb.query.whereIn('id', ids);
-      qb.column('id', 'first_name', 'last_name')
-    }}],
+    withRelated: ['conversation.users.user', 'conversation.last_message']
   })
 };
 
@@ -79,7 +84,7 @@ rooms.updateById = function(id, params) {
   return bookshelf.knex('conversations')
   .where('id', '=', id)
   .update({
-    lastMessage: params.lastMessage
+    last_message: params.last_message
   })
 };
 

@@ -15,21 +15,22 @@ var ioListeners = {
 
       socket.on('joinRoom', function(join){
         socket.username = join.name;
-        socket.room = join.conversation;
+        socket.room = join.converssation;
         socket.join(join.conversation);      
         // echo to room 1 that a person has connected to their room
+        console.log(join.conversation, 'join convo')
         io.to(join.conversation).emit('updatechat', 'SERVER', join.name + ' has connected to this room');
       });
 
       socket.on('message', function(message){
-        console.log()
+        console.log( message.conversation)
         chats.add({ 
           conversation: message.conversation,
           log: message.log,
           user: message.user
-        }).then(function(chat) {
+        }).then(async function(chat) {
           io.to(message.conversation).emit('message', message);
-          conversations.updateById(message.conversation, {last_message: chat[0]})
+          const aa = await conversations.updateById(message.conversation, {last_message: chat[0].chat_conversation_id})
         })
       });
 
