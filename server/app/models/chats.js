@@ -8,7 +8,7 @@ module.exports = function(db) {
       return this.belongsTo('usersConversations');
     },
     user: function() {
-      return this.hasOne('users', 'id');
+      return this.belongsTo('users', 'chat_user_id');
     }
   });
 

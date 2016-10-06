@@ -21,10 +21,12 @@ availability.setAvailability = function(userId, data) {
       const {calendars, times, days, interval} = data;
       const timesSorted = sortTimes(times);
       const input = createCalendarInputs(days, calendars);
-  
+
+      console.log(calendars)
       bookshelf.knex.transaction(function(trx) {
         return bookshelf.knex.raw(getUsersCalendars(userId, calendars)).transacting(trx)
         .then((ids) => {
+          console.log(ids)
           ids = _.map(ids.rows, (row) => {
             return row.id
           })
@@ -43,13 +45,15 @@ availability.setAvailability = function(userId, data) {
         .then(() => {
           resolve({success: true}) /// NEEEED TO ADD CONFLICTS?
         })
-        .catch(() => {
+        .catch((err) => {
+          // console.log(err)
           reject({error: 'Error updating availability'});
           return;
         })
       });
 
     } catch(err) {
+      // console.log(err)
       reject({error: 'Error updating availability'});
       return;
     }

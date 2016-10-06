@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var chats = require('../controllers/chats');
 var conversations = require('../controllers/conversations');
 var rooms = []
@@ -29,7 +30,13 @@ var ioListeners = {
           log: message.log,
           user: message.user
         }).then(async function(chat) {
-          io.to(message.conversation).emit('message', message);
+           chat[0].user = {
+            id: _.get(message, 'user'),
+            facebook_user_id: _.get(message, 'facebook_user_id'),
+            first_name: _.get(message, 'first_name'),
+            last_name: _.get(message, 'last_name')
+          }
+          io.to(message.conversation).emit('message', chat[0]);
           const aa = await conversations.updateById(message.conversation, {last_message: chat[0].chat_conversation_id})
         })
       });
