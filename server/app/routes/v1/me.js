@@ -26,7 +26,7 @@ var ResourcesController = require('../../controllers/resources');
 
 router.route('/')
   .get(function(req, res) {
-    // console.log(req.decoded)
+    
     Users
       .getById(req.decoded._id) // when getting me we want to populate everything
       .then(function(user) {
@@ -126,11 +126,15 @@ router.route('/bookings')
   
 
 router.route('/sessions/enroll')
-  .put(function(req, res) {   
+  .put(async function(req, res) {   
     var calendars = req.body.calendars || [];
     calendars = JSON.parse(calendars);
-    Bookings.add({user: req.decoded._id, calendar: calendars[0]})
-    console.log(calendars)
+    try {
+      const booking = await Bookings.add({user: req.decoded._id, calendar: calendars[0]})
+      res.json(booking);
+    } catch(err) {
+      res.status(422).json(err);
+    }
 
 
 

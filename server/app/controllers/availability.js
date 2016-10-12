@@ -22,7 +22,6 @@ availability.setAvailability = function(userId, data) {
       const timesSorted = sortTimes(times);
       const input = createCalendarInputs(days, calendars);
 
-      console.log(calendars)
       bookshelf.knex.transaction(function(trx) {
         return bookshelf.knex.raw(getUsersCalendars(userId, calendars)).transacting(trx)
         .then((ids) => {
@@ -70,9 +69,19 @@ availability.getAll = function(properties) {
 
 
 availability.getIsInstructorAvailable = function(properties) {
+  // currently not used.
   var query = isUserAvailableGivenTimes(properties);
   return bookshelf.knex.raw(query).then(function(w) {
     return properties.group ? _.groupBy(w.rows, 's_date') : w.rows
+  })
+};
+
+availability.isUserAvailableForBooking = function(properties) {
+  var query = isUserAvailableForBooking(properties);
+  return bookshelf.knex.raw(query)
+  .then(function(resp) {
+    console.log(resp)
+    return resp.rows[0].count === '0';
   })
 };
 
@@ -82,6 +91,7 @@ availability.getIsInstructorAvailable = function(properties) {
 
 // Helper Functions
 function isUserAvailableGivenTimes({agent, date, start, end}) {
+  // currently not used
   start = moment(start, 'H:mm').format('HH:MM:SS')
   end = moment(end, 'H:mm').format('HH:MM:SS')
   return`select count(1)
@@ -98,6 +108,41 @@ function isUserAvailableGivenTimes({agent, date, start, end}) {
     (dct.start <= TO_TIMESTAMP('${start}', 'HH24:MI:SS')::TIME and dct.end >= TO_TIMESTAMP('${end}', 'HH24:MI:SS')::TIME)
   )`
 }
+
+
+// Helper Functions
+function isUserAvailableForBooking({agent, start, end}) {
+  start = moment.utc(start).format();
+  end = moment.utc(end).format();
+  return`select count(1)
+  from calendars dc
+  inner join "calendarRecurringDay" dcd
+  on dcd.calendar_id = dc.id
+  inner join "calendarRecurringTime" dct
+  on dct.calendar_recurring_day_id = dcd.id
+  inner join "bookings" book
+  on book.bookings_agent_id = ${agent}
+  
+  where dc.calendar_agent_id = ${agent} and dcd.dow = EXTRACT(DOW FROM TIMESTAMP '${start}') 
+ 
+
+   and (
+    (dct.start > '${start}'::timestamp::TIME and dct.start < '${end}'::timestamp::TIME)
+    or 
+    (dct.end > '${start}'::timestamp::TIME and dct.start < '${end}'::timestamp::TIME)
+    or 
+    (dct.start <= '${start}'::timestamp::TIME and dct.end >= '${end}'::timestamp::TIME)
+  )`
+
+  //  and (
+  //   (book.start > '${start}'::timestamp and book.start < '${end}'::timestamp)
+  //   or 
+  //   (book.end > '${start}'::timestamp and book.start < '${end}'::timestamp)
+  //   or 
+  //   (book.start <= '${start}'::timestamp and book.end >= '${end}'::timestamp)
+  // )
+}
+
 
 
 function getUsersCalendars(userId, calendars) {
@@ -120,8 +165,10 @@ function getDeleteQuery(userId, days, calendars) {
 }
 
 function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
+  startDate = moment.utc(startDate).format();
+  endDate = moment.utc(endDate).format();
   return `select ${distinct ? 'DISTINCT ON (s_date)' : ''} s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id, au.facebook_user_id,
-  dc.id as calendar_id, calendar_capacity, dcd.dow, dct.start, dct.end, s.date::timestamp::date as s_date,
+  dc.id as calendar_id, calendar_capacity, dcd.dow, dct.start, dct.end, s.date::timestamp::date as s_date, to_char(s.date, 'MM DD YYYY') as super_dte,
   (
      select jsonb_agg(bookings)
      from (
@@ -164,7 +211,7 @@ function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
   union
 
   select s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id, au.facebook_user_id,
-  dc.id as calendar_id, calendar_capacity, EXTRACT(DOW FROM s.date) as dow, dcd.start::timestamp::time, dcd.end::timestamp::time, s.date::timestamp::date as s_date,
+  dc.id as calendar_id, calendar_capacity, EXTRACT(DOW FROM s.date) as dow, dcd.start::timestamp::time, dcd.end::timestamp::time, s.date::timestamp::date as s_date, to_char(s.date, 'MM DD YYYY') as super_dte,
   (
      select jsonb_agg(bookings)
      from (

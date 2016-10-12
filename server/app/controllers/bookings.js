@@ -1,6 +1,6 @@
 'use strict';
 
-var BluebirdPromise = require('bluebird');
+var Promise = require('bluebird');
 var uuid = require('node-uuid');
 var moment = require('moment');
 var _ = require('lodash');
@@ -8,7 +8,7 @@ var _ = require('lodash');
 var bookshelf = require('../../db/bookshelf');
 var Bookings = bookshelf.model('services');
 var Bookings = bookshelf.model('bookings');
-// var Roles //= require('../models/roles');
+var availability = require('./availability');
 
 var bookings = {};
 
@@ -28,8 +28,8 @@ bookings.getBookings = function(query) {
     booking_status: query.status,
 
     // TODO BEFORE AND AFTER QUERIES
-    start: query.start,
-    end: query.end
+    start: moment.utc(query.start).format(),
+    end: moment.utc(query.end).format()
   };
 
   return bookshelf.knex.raw(`
@@ -64,20 +64,52 @@ bookings.getById = function(id) {
 
 
 bookings.add = function(data) {
-  var user = data.user;
-  var params = data.calendar;
-  
-  // resource id - GET reource
-  // var booking = {
-  //   booking_calendar_id: '',
-  //   booking_capacity: '',
-  //   bookingPrice: '',
-  //   booking_status: '',
-  //   start: '',
-  //   end: ''
-  // };
+  // TODO add required on calendar
+  return new Promise(async function(resolve, reject) {
+    var user = data.user;
+    var params = data.calendar;
+    try {
+      let calendar = await bookshelf.knex('calendars')
+        .where({'calendars.id': params.calendar_id})
+        .join('services', 'services.id', '=', 'calendars.calendar_service_id')
+        .select('calendars.*', 'services.service_capacity')
+      calendar = calendar[0];
 
-  // return bookshelf.knex('bookings').insert(booking).returning('*')
+      const noConflicts = await availability.isUserAvailableForBooking({start: params.start, end: params.end, agent: calendar.calendar_agent_id})
+      if (!noConflicts) {
+        reject({error: 'A booking already exists in the time slot'});
+        return;
+      }
+    
+      const booking = {
+        booking_calendar_id: calendar.id,
+        bookings_agent_id: calendar.calendar_agent_id,
+        booking_capacity: calendar.calendar_capacity || calendar.service_capacity,
+        booking_status: '',
+        start: moment.utc(params.start).format(),
+        end: moment.utc(params.end).format()
+      };
+      
+      bookshelf.knex.transaction(async function(trx) {
+        try {
+          const bookingDb = await bookshelf.knex('bookings').insert(booking).transacting(trx).returning('*')
+          const enrolled = await bookshelf.knex('enrolledUsers').insert({
+            booking_id: bookingDb[0].id,
+            booking_user_id: user
+          }).returning('*').transacting(trx)
+          trx.commit
+          resolve(enrolled)
+        } catch(err) {
+          trx.rollback
+          throw err;
+        }
+      });
+
+    } catch (err) {
+      console.log(err)
+      reject(err)
+    }
+  });
 };
 
 
@@ -87,12 +119,12 @@ bookings.updateById = function(id, params) {
   var updatedObj = {};
 
   if (params.start) {
-    updatedObj.start = params.start;
+    updatedObj.start = moment.utc(params.start).format();
     // SEND PUSH AND UPDATE USERS
   }
 
   if (params.end) {
-    updatedObj.end = params.end;
+    updatedObj.end = moment.utc(params.end).format();
     // SEND PUSH AND UPDATE USERS
   }
 
