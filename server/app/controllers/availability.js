@@ -110,10 +110,11 @@ function isUserAvailableGivenTimes({agent, date, start, end}) {
 }
 
 
-// Helper Functions
+/// Helper Functions
 function isUserAvailableForBooking({agent, start, end}) {
   start = moment.utc(start).format();
   end = moment.utc(end).format();
+  console.log(start, end, agent)
   return`select count(1)
   from calendars dc
   inner join "calendarRecurringDay" dcd
@@ -123,25 +124,26 @@ function isUserAvailableForBooking({agent, start, end}) {
   inner join "bookings" book
   on book.bookings_agent_id = ${agent}
   
-  where dc.calendar_agent_id = ${agent} and dcd.dow = EXTRACT(DOW FROM TIMESTAMP '${start}') 
- 
+  where dc.calendar_agent_id = ${agent} 
+  and (
+    (book.start > '${start}' and book.start < '${end}')
+    or 
+    (book.end > '${start}' and book.start < '${end}')
+    or 
+    (book.start <= '${start}' and book.end >= '${end}')
+  )
 
-   and (
-    (dct.start > '${start}'::timestamp::TIME and dct.start < '${end}'::timestamp::TIME)
-    or 
-    (dct.end > '${start}'::timestamp::TIME and dct.start < '${end}'::timestamp::TIME)
-    or 
-    (dct.start <= '${start}'::timestamp::TIME and dct.end >= '${end}'::timestamp::TIME)
-  )`
+  `
 
   //  and (
-  //   (book.start > '${start}'::timestamp and book.start < '${end}'::timestamp)
+  //   (dct.start > '${start}'::timestamp::TIME and dct.start < '${end}'::timestamp::TIME)
   //   or 
-  //   (book.end > '${start}'::timestamp and book.start < '${end}'::timestamp)
+  //   (dct.end > '${start}'::timestamp::TIME and dct.start < '${end}'::timestamp::TIME)
   //   or 
-  //   (book.start <= '${start}'::timestamp and book.end >= '${end}'::timestamp)
+  //   (dct.start <= '${start}'::timestamp::TIME and dct.end >= '${end}'::timestamp::TIME)
   // )
 }
+
 
 
 
@@ -168,7 +170,7 @@ function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
   startDate = moment.utc(startDate).format();
   endDate = moment.utc(endDate).format();
   return `select ${distinct ? 'DISTINCT ON (s_date)' : ''} s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id, au.facebook_user_id,
-  dc.id as calendar_id, calendar_capacity, dcd.dow, dct.start, dct.end, s.date::timestamp::date as s_date, to_char(s.date, 'MM DD YYYY') as super_dte,
+  dc.id as calendar_id, calendar_capacity, dcd.dow, dct.start, dct.end, s.date::timestamp::date as s_date, to_char(s.date, 'YYYY-MM-DD') as raw_date,
   (
      select jsonb_agg(bookings)
      from (
@@ -211,7 +213,7 @@ function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
   union
 
   select s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id, au.facebook_user_id,
-  dc.id as calendar_id, calendar_capacity, EXTRACT(DOW FROM s.date) as dow, dcd.start::timestamp::time, dcd.end::timestamp::time, s.date::timestamp::date as s_date, to_char(s.date, 'MM DD YYYY') as super_dte,
+  dc.id as calendar_id, calendar_capacity, EXTRACT(DOW FROM s.date) as dow, dcd.start::timestamp::time, dcd.end::timestamp::time, s.date::timestamp::date as s_date, to_char(s.date, 'YYYY-MM-DD') as raw_date,
   (
      select jsonb_agg(bookings)
      from (
