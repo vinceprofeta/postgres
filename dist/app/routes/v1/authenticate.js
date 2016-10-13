@@ -83,6 +83,7 @@ function facebookLogin(req, res) {
         });
         res.json({ token: token });
       }).catch(function (err) {
+        console.log(err);
         res.status(401).json({ success: false, error: 'Authentication failed.' });
       });
     }
