@@ -9,7 +9,10 @@ var bodyParser = require('body-parser');
 var worker = require('./app/contextManagers/workerContext');
 
 var routes = require('./app/routes/v1');
-require('dotenv').config();
+
+if (!process.env.PRODUCTION) {
+  require('dotenv').config();
+}
 
 var app = express();
 // Token Variable
