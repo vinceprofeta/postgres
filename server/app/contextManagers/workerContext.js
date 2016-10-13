@@ -9,7 +9,7 @@ var worker = {}
 
 start();
 function start() {
-  amqp.connect('amqp://localhost', function(err, conn) {
+  amqp.connect(process.env.CLOUDAMQP_URL || 'amqp://localhost', function(err, conn) {
     if (err) {
       console.error("[AMQP]", err.message);
       return setTimeout(start, 1000);
