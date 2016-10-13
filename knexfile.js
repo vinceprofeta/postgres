@@ -3,7 +3,7 @@ require('dotenv').config();
 module.exports = {
     development: {
         client: 'pg',
-        connection: 'postgres://localhost/postgres_test'
+        connection: 'postgres://localhost/tyro'
     },
     production: {
         client: 'pg',
