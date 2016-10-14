@@ -28,8 +28,8 @@ bookings.getBookings = function(query) {
     booking_status: query.status,
 
     // TODO BEFORE AND AFTER QUERIES
-    start: moment.utc(query.start).format(),
-    end: moment.utc(query.end).format()
+    start: query.start,
+    end: query.end
   };
 
   return bookshelf.knex.raw(`

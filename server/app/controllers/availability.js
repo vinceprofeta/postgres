@@ -78,6 +78,7 @@ availability.getIsInstructorAvailable = function(properties) {
 
 availability.isUserAvailableForBooking = function(properties) {
   var query = isUserAvailableForBooking(properties);
+  console.log(query)
   return bookshelf.knex.raw(query)
   .then(function(resp) {
     console.log(resp)
@@ -112,8 +113,8 @@ function isUserAvailableGivenTimes({agent, date, start, end}) {
 
 /// Helper Functions
 function isUserAvailableForBooking({agent, start, end}) {
-  start = moment.utc(start).format();
-  end = moment.utc(end).format();
+  // start = moment.utc(start).format();
+  // end = moment.utc(end).format();
   console.log(start, end, agent)
   return`select count(1)
   from calendars dc
@@ -126,11 +127,11 @@ function isUserAvailableForBooking({agent, start, end}) {
   
   where dc.calendar_agent_id = ${agent} 
   and (
-    (book.start > '${start}' and book.start < '${end}')
+    (book.start > '${start}'::timestamp and book.start < '${end}'::timestamp)
     or 
-    (book.end > '${start}' and book.start < '${end}')
+    (book.end > '${start}'::timestamp and book.start < '${end}'::timestamp)
     or 
-    (book.start <= '${start}' and book.end >= '${end}')
+    (book.start <= '${start}'::timestamp and book.end >= '${end}'::timestamp)
   )
 
   `

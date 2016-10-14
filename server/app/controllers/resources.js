@@ -190,9 +190,9 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
           service.service_resource_id = resourceAdded;
           service.service_skill_id = _.get(skill, '[0].id');
           service.image = service.image || _.get(skill, '[0].image');
-
           return new Services(service).save(null, {transacting: trx})
           .then(function(serviceAdded) { 
+            console.log(serviceAdded, 'sdfksdlfsadfsda')
             serviceAdded = _.get(serviceAdded, 'attributes');
 
             return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id')
@@ -230,7 +230,7 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
       resolve({success: true})
     })
     .catch(function(err) {
-      // console.log(err)
+      console.log(JSON.stringify(err))
       reject({error: err})
     });
   }); 
