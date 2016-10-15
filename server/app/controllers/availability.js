@@ -168,8 +168,8 @@ function getDeleteQuery(userId, days, calendars) {
 }
 
 function getQuery({startDate, endDate, serviceId, agentId, distinct}) {
-  startDate = moment.utc(startDate).format();
-  endDate = moment.utc(endDate).format();
+  // startDate = moment.utc(startDate).format();
+  // endDate = moment.utc(endDate).format();
   return `select ${distinct ? 'DISTINCT ON (s_date)' : ''} s.date, au.first_name, au.last_name, ds.service_duration, ds.service_name, calendar_service_id, au.facebook_user_id,
   dc.id as calendar_id, calendar_capacity, dcd.dow, dct.start, dct.end, s.date::timestamp::date as s_date, to_char(s.date, 'YYYY-MM-DD') as raw_date,
   (

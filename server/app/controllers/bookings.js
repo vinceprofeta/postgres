@@ -28,8 +28,8 @@ bookings.getBookings = function(query) {
     booking_status: query.status,
 
     // TODO BEFORE AND AFTER QUERIES
-    start: query.start,
-    end: query.end
+    start:query.start, // moment.utc(query.start).format(),
+    end: query.end //moment.utc(query.end).format()
   };
 
   return bookshelf.knex.raw(`
@@ -86,8 +86,8 @@ bookings.add = function(data) {
         bookings_agent_id: calendar.calendar_agent_id,
         booking_capacity: calendar.calendar_capacity || calendar.service_capacity,
         booking_status: '',
-        start: moment.utc(params.start).format(),
-        end: moment.utc(params.end).format()
+        start: params.start, //moment.utc(params.start).format(),
+        end: params.end //moment.utc(params.end).format()
       };
       
       bookshelf.knex.transaction(async function(trx) {
