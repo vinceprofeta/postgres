@@ -33,17 +33,27 @@ bookings.getBookings = function(query) {
   };
 
   return bookshelf.knex.raw(`
-    select sv.*, bk.*, cd.*, us.first_name, us.last_name
+    select sv.image, sv.service_name, bk.*, us.first_name, us.last_name,
+    (SELECT array_to_json(array_agg(row_to_json(sub)))
+      FROM ( 
+        select eu.id, eu.first_name from
+        "enrolledUsers" euj
+        inner join users eu
+        on eu.id = euj.booking_user_id
+        WHERE bk.id = euj.booking_id
+      ) as sub
+    ) AS enrolled
+
     from bookings bk
     inner join calendars cd
-    on cd.id = bk.id
+    on cd.id = bk.booking_calendar_id
     inner join services sv
     on sv.id = cd.calendar_service_id
     inner join users us
     on cd.calendar_agent_id = us.id
-    where cd.id = bk.booking_calendar_id
   `).then((result) => {
-    return result.rows;
+    console.log(result.rows)
+    return result.rows
   })
 
   return Bookings.where(_.pickBy(queryObject, _.identity)).fetchAll({
@@ -57,8 +67,32 @@ bookings.getBookings = function(query) {
 
 
 bookings.getById = function(id) {
-  return Bookings.where('id', id).fetch({
-    // withRelated: ['resource', 'skill'],
+  return bookshelf.knex.raw(`
+    select sv.image, sv.service_name, bk.*, us.first_name, us.last_name,
+    (SELECT array_to_json(array_agg(row_to_json(sub)))
+      FROM ( 
+        select eu.id, eu.first_name from
+        "enrolledUsers" euj
+        inner join users eu
+        on eu.id = euj.booking_user_id
+        WHERE bk.id = euj.booking_id
+      ) as sub
+    ) AS enrolled
+
+    from bookings bk
+    inner join calendars cd
+    on cd.id = bk.booking_calendar_id
+    inner join services sv
+    on sv.id = cd.calendar_service_id
+    inner join users us
+    on cd.calendar_agent_id = us.id
+    WHERE bk.id = ${id}
+  `).then((result) => {
+    if (_.get(result, 'rows[0]')) {
+      return _.get(result, 'rows[0]')
+    } else {
+      throw new Error('Booking Not Found')
+    }
   })
 };
 

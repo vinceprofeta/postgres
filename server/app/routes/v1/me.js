@@ -77,6 +77,19 @@ router.route('/')
       });
   });
 
+router.route('/bookings/:id')
+  .get(function(req, res) {
+    Bookings
+    .getById(req.params.id)
+    .then(function(booking) {
+      res.json(booking);
+    })
+    .catch(function(err) {
+      console.log(err)
+      res.status(422).json(err);
+    });
+  })
+
 
 router.route('/bookings')
   .get(function(req, res) {
@@ -86,8 +99,11 @@ router.route('/bookings')
       Bookings
         .getBookings(query)
         .then(function(bookings) {
-          console.log(bookings);
           res.json(bookings);
+        })
+        .catch(function(err) {
+          console.log(err)
+          res.status(422).json(err);
         });
 
     } else {
