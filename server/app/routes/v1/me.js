@@ -82,6 +82,7 @@ router.route('/bookings/:id')
     Bookings
     .getById(req.params.id)
     .then(function(booking) {
+      console.log(booking)
       res.json(booking);
     })
     .catch(function(err) {

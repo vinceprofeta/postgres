@@ -68,7 +68,7 @@ bookings.getBookings = function(query) {
 
 bookings.getById = function(id) {
   return bookshelf.knex.raw(`
-    select sv.image, sv.service_name, bk.*, us.first_name, us.last_name,
+    select sv.image, sv.service_name, sv.image, row_to_json(cd) as calendar, bk.*, us.first_name, us.last_name, us.facebook_user_id,
     (SELECT array_to_json(array_agg(row_to_json(sub)))
       FROM ( 
         select eu.id, eu.first_name from

@@ -6,21 +6,14 @@ var router = express.Router();
 
 // Utils
 var hasRole = require('../../utils/roleMiddleware');
+var calendarSearch = require('../../elasticSearchIndexes/calendar-search.js')
 
 // Models
 var Sessions// = require('../../models/sessions');
 
-router.route('/')
-  .get(function(req, res) {
-    Sessions.search(
-  {query_string: {query: req.query.query}},
-  {
-    hydrate: true
-  },
-  function(err, results) {
-    res.json(_.get(results, 'hits.hits', []));
+router.route('/').get(function(req, res) {
+  calendarSearch.queryCalendars(req.body.query);   
 });
-  });
 
 
 module.exports = router;

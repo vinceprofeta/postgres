@@ -67,37 +67,4 @@ app.use(function(err, req, res, next) {
 
 
 
-
-
-// var elastic = require('./app/elasticSearchIndexes/services-index.js');
-// var client = require('./elasticsearch.js');
-// client.search({  
-//   index: 'services_index',
-//   type: 'service',
-//   body: {
-//     query: {
-//       match: { "serviceDescription": "service description" }
-//     },
-//   }
-// },function (error, response,status) {
-//     if (error){
-//       console.log("search error: "+error)
-//     }
-//     else {
-//       console.log("--- Response ---");
-//       console.log(response);
-//       console.log("--- Hits ---");
-//       response.hits.hits.forEach(function(hit){
-//         console.log(hit);
-//       })
-//     }
-// });
-
-// elastic.indexExists('services_index').then(function (exists) {
-//   if (!exists) {
-//     return elastic.initIndex('services_index').then(elastic.initServiceMapping)
-//   }
-// })
-
-
 module.exports = app;
