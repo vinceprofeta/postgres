@@ -15,7 +15,7 @@ amqp.connect('amqp://localhost', function(err, conn) {
     ch.prefetch(1);
     console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", q);
     ch.consume(q, function(msg) {      
-      determineMessage(msg.content);
+      determineMessage(msg);
       ch.ack(msg);
     }, {noAck: false});
 
@@ -25,6 +25,7 @@ amqp.connect('amqp://localhost', function(err, conn) {
 
 // Helper functions
 function determineMessage(msg) {
+  msg = JSON.parse(msg.content.toString())
    // calendars
    if (msg.route === 'calendar') {
       if (msg.action === 'delete') {
@@ -48,7 +49,7 @@ function determineMessage(msg) {
 
 // Query functions
 function addCalendarToES(msg) {
-   knex('calendars').where('calendars.id', '=', msg.calendarId)
+   knex('calendars').where('calendars.id', '=', msg.id)
    .join('services', 'services.id', '=', 'calendars.calendar_service_id')
    .join('users', 'users.id', '=', 'calendars.calendar_agent_id')
    .join('skills', 'skills.id', '=', 'services.service_skill_id')
@@ -59,7 +60,7 @@ function addCalendarToES(msg) {
 }
 
 function addSkillToES(msg) {
-   knex('skillsToCategories').where('skillsToCategories.id', '=', msg.skillToCatId)
+   knex('skillsToCategories').where('skillsToCategories.id', '=', msg.id)
    .join('skillCategories', 'skillCategories.id', '=', 'skillsToCategories.skill_category')
    .join('skills', 'skills.id', '=', 'skillsToCategories.skill_category')
    .select('skillCategories.id','skillCategories.name as skill_category',  'skills.name as skill_name', 'skills.description as skill_description')

@@ -41,7 +41,12 @@ services.getServices = function(query) {
 
 
 services.getPopularServices = function(query) {
-  return Services.fetchAll({})
+  return bookshelf.knex.raw(`
+    select services.*, cd.*, cd.id as calendar_id
+    from services
+    inner join calendars cd
+    on services.id = cd.calendar_service_id
+  `)
 };
 
 

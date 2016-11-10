@@ -18,6 +18,7 @@ export async function queryCalendars(query) {
           reject("search error: "+error);
         }
         else {
+          console.log(response.hits.hits)
           resolve(response.hits.hits);
         }
     });

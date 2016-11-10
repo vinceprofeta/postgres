@@ -79,11 +79,9 @@ function publish(routingKey, content, delay) {
 
 
 
-
 worker.addMessage = function(routingkey, msg) {
   publish(worker_queue, msg);
 }
-
 module.exports = worker;
 
 
