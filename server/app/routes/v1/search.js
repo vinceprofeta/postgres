@@ -11,8 +11,23 @@ var calendarSearch = require('../../elasticSearchIndexes/calendar-search.js')
 // Models
 var Sessions// = require('../../models/sessions');
 
-router.route('/').get(function(req, res) {
-  calendarSearch.queryCalendars(req.body.query);   
+router.route('/')
+.get(async (req, res) => {
+  try {
+    const results = await calendarSearch.queryCalendars(req.query.search);
+    res.json(results);
+  } catch(err) {
+    res.status(422).json(err);
+  }
+})
+.post(async (req, res) => {
+  try {
+    const results = await calendarSearch.queryCalendars(req.body.search);
+    res.json(results);
+  } catch(err) {
+    console.log(err)
+    res.status(422).json(err);
+  }
 });
 
 

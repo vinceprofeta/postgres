@@ -15,7 +15,7 @@ amqp.connect('amqp://localhost', function(err, conn) {
     ch.prefetch(1);
     console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", q);
     ch.consume(q, function(msg) {      
-      addCalendarToES(msg.content);
+      determineMessage(msg.content);
       ch.ack(msg);
     }, {noAck: false});
 
@@ -23,17 +23,32 @@ amqp.connect('amqp://localhost', function(err, conn) {
   });
 });
 
+// Helper functions
 function determineMessage(msg) {
+   // calendars
    if (msg.route === 'calendar') {
-      addCalendarToES(msg)
-   } else if(msg.route === 'skill') {
-      addSkillToES(msg)
+      if (msg.action === 'delete') {
+        elastic.deleteCalendar({id: msg.id});
+      } else {
+        addCalendarToES(msg)
+      }
+   } 
+
+   // skills
+   else if(msg.route === 'skill') {
+      if (msg.action === 'delete') {
+        elastic.deleteSkill({id: msg.id});
+      } else {
+        addSkillToES(msg)
+      }
    }
 }
 
 
+
+// Query functions
 function addCalendarToES(msg) {
-   knex('calendars').where('calendars.id', '=', 1)
+   knex('calendars').where('calendars.id', '=', msg.calendarId)
    .join('services', 'services.id', '=', 'calendars.calendar_service_id')
    .join('users', 'users.id', '=', 'calendars.calendar_agent_id')
    .join('skills', 'skills.id', '=', 'services.service_skill_id')
@@ -44,7 +59,7 @@ function addCalendarToES(msg) {
 }
 
 function addSkillToES(msg) {
-   knex('skillsToCategories').where('skillsToCategories.id', '=', 1)
+   knex('skillsToCategories').where('skillsToCategories.id', '=', msg.skillToCatId)
    .join('skillCategories', 'skillCategories.id', '=', 'skillsToCategories.skill_category')
    .join('skills', 'skills.id', '=', 'skillsToCategories.skill_category')
    .select('skillCategories.id','skillCategories.name as skill_category',  'skills.name as skill_name', 'skills.description as skill_description')
@@ -54,8 +69,8 @@ function addSkillToES(msg) {
 }
 
 
-// Mappings
 
+// Mappings
 elastic.indexExists('calendars_index').then(function (exists) {
   if (!exists) {
     return elastic.initIndex('calendars_index').then(elastic.initServiceMapping)

@@ -156,8 +156,8 @@ function addCalendar(calendar) {
 
             suggest: {
                 input: calendar.service_name.split(" ").concat(calendar.first_name + ' ' + calendar.last_name),
-                output: calendar.title,
-                payload: calendar || {}
+                output: `${calendar.title} - ${calendar.first_name} ${calendar.last_name}`,
+                payload: {calendar_id: calendar.calendar_id}
             }
         }
     });
@@ -173,7 +173,7 @@ function deleteCalendar(calendar) {
   return elasticClient.delete({
     index: 'calendars_index',
     type: "calendar",
-    id: calendar.calendar_id
+    id: calendar.id
   });
 }
 exports.deleteCalendar = deleteCalendar;
@@ -241,8 +241,7 @@ exports.addSkill = addSkill;
 function deleteSkill(skill) {
   return elasticClient.delete({
     index: 'skills_index',
-    type: skill.category,
-    id: skill.calendar_id
+    id: skill.id
   });
 }
 exports.deleteSkill = deleteSkill;

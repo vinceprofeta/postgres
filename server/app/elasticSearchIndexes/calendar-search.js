@@ -1,26 +1,27 @@
 var elasticClient = require('../../elasticsearch.js');
+var Promise = require('bluebird');
 
-
-export async function queryCalendars(service) {
-    client.search({  
+export async function queryCalendars(query) {
+  return new Promise((resolve, reject) => {
+    elasticClient.search({  
       index: ['calendars_index', 'skills_index'],
       body: {
         query: {
           "query_string": {
-            "query": 'soccer'
+            "query": query
           }
         },
       }
     },function (error, response,status) {
         if (error){
           console.log("search error: "+error)
+          reject("search error: "+error);
         }
         else {
-          response.hits.hits.forEach(function(hit){
-            console.log(hit);
-          })
+          resolve(response.hits.hits);
         }
     });
+  })
 }
 
 
