@@ -63,7 +63,7 @@ function addSkillToES(msg) {
    knex('skillsToCategories').where('skillsToCategories.id', '=', msg.id)
    .join('skillCategories', 'skillCategories.id', '=', 'skillsToCategories.skill_category')
    .join('skills', 'skills.id', '=', 'skillsToCategories.skill_category')
-   .select('skillCategories.id','skillCategories.name as skill_category',  'skills.name as skill_name', 'skills.description as skill_description')
+   .select('skillCategories.id as category_id','skillCategories.name as skill_category', 'skills.id as skill_id',  'skills.name as skill_name', 'skills.description as skill_description')
    .then((data) => {
       elastic.addSkill(data[0]);
    })

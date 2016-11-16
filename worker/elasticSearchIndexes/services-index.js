@@ -196,6 +196,8 @@ function initSkillMapping() {
                 skill_name: { type: "string" },
                 skill_description: { type: "string" },
                 skill_category: { type: "string" },
+                skill_id: { type: "number" },
+                category_id: { type: "number" },
                 suggest: {
                     type: "completion",
                     analyzer: "simple",
@@ -222,6 +224,8 @@ function addSkill(skill) {
       skill_name: skill.skill_name,
       skill_description: skill.skill_description,
       skill_category: skill.skill_category,
+      skill_id: skill.skill_id,
+      category_id: skill.category_id,
       suggest: {
         input: skill.skill_name.split(" ").concat(skill.skill_category.split(" ")),
         output: skill.skill_name,

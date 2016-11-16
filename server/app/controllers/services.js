@@ -9,6 +9,7 @@ var uuid = require('node-uuid');
 var moment = require('moment');
 var _ = require('lodash');
 var formatServiceAndResource = require('../utils/formatServiceAndResource');
+var cloudinary = require('../utils/cloudinary');
 
 var bookshelf = require('../../db/bookshelf');
 var Services = bookshelf.model('services');
@@ -124,8 +125,16 @@ services.updateById = function(id, params) {
 
 
 services.addService = function(user, s, resourceId) {
+  console.log(s)
   const {service} = formatServiceAndResource(user, s);
-  return new BluebirdPromise(function(resolve, reject) {
+  return new BluebirdPromise(async function(resolve, reject) {
+    let image;
+    try {
+      image = await addPhoto(service.image, service.service_name);
+      image = image[0]
+    } catch(err) {
+      console.log(err)
+    }
     bookshelf.knex.transaction(function(trx) {
       return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id').then(function(role) {
         role = _.get(role, '[0].id');
@@ -136,7 +145,7 @@ services.addService = function(user, s, resourceId) {
           return bookshelf.knex('skills').transacting(trx).where('id', '=', service.service_skill_id).then(function(skill) {
             service.service_resource_id = Number(resourceId);
             service.service_skill_id = _.get(skill, '[0].id');
-            service.image = service.image || _.get(skill, '[0].image');
+            service.image = image || _.get(skill, '[0].image');
 
             return new Services(service).save(null, {transacting: trx}).then(function(serviceAdded) { 
               serviceAdded = _.get(serviceAdded, 'attributes');
@@ -157,6 +166,8 @@ services.addService = function(user, s, resourceId) {
       .then(trx.commit)
       .catch(trx.rollback);
       })
+
+
       .then(function(resp) {
         resolve({success: true})
       })
@@ -164,54 +175,28 @@ services.addService = function(user, s, resourceId) {
         // console.log(err)
         reject({error: err})
       });
+
+
     }); 
   });
 }
 
 
+function addPhoto(photo, name) {
+  console.log(photo)
+  var photos = [photo];
+  var promises = _.map(photos, function(photo) {
+    name = name.replace(/ /g, '_')+'-'+Date.now();
+    console.log(photo, name)
+    return cloudinary(photo, name)
+  });
 
-
-
-
-// services.addSessionsForListing = function(listingId, times) {
-//   return services.getById(listingId)
-//   .then(function(listing) {
-//     var addedSessions = _.map(times, function(time) {
-//       return createSession({
-//         times: time,
-//         listing: listing
-//       })
-//     });
-//     console.log(addedSessions)
-//     return Sessions.create(addedSessions, function (err, addedSession) {
-//       if (err) { throw err }
-//       return addedSession;
-//     });
-//   })
-//   .catch(function() {
-//     throw new Error({error: 'listing not found', code: 404})
-//   })
-// };
-
-
-// function createSession(obj) {
-//   listing = listing || {};
-//   var times = _.get(obj, 'times', {})
-//   var listing = _.get(obj, 'listing', {})
-  
-//   return new Sessions({
-//     notes: '',
-//     dateAndTime: times.dateAndTime,
-//     date:  times.date,
-//     time: {
-//     start: times.time,
-//     end: moment(times.time, 'H:mm').add(listing.duration || 30, 'minutes').format('H:mm')
-//     },      
-//     enrolled: [],
-//     listing: listing._id
-//   });
-// }
-
+  return BluebirdPromise.all(promises).then(function(photos) {
+    return _.map(photos, function(img) {
+      return img;
+    });
+  });
+}
 
 
 

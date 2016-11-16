@@ -4,6 +4,7 @@ var uuid = require('node-uuid');
 var moment = require('moment');
 var _ = require('lodash');
 var formatServiceAndResource = require('../utils/formatServiceAndResource.js');
+var cloudinary = require('../utils/cloudinary');
 
 var bookshelf = require('../../db/bookshelf');
 var knex = require('../../db/knex');
@@ -178,6 +179,9 @@ resources.getMembers = function(id, query, role) {
 resources.addWithServiceMembershipCalendar = function(user, r, s) {
   const {resource, service} = formatServiceAndResource(user, s, r);
   return new BluebirdPromise(function(resolve, reject) {
+    console.log('IMAGEEEEEE ONE')
+    addPhoto(service.image).then(function(image) {
+    console.log('IMAGEEEEEE',image)
     bookshelf.knex.transaction(function(trx) {
       
       bookshelf.knex('resources').transacting(trx).insert(resource).returning('id')
@@ -189,7 +193,8 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
           
           service.service_resource_id = resourceAdded;
           service.service_skill_id = _.get(skill, '[0].id');
-          service.image = service.image || _.get(skill, '[0].image');
+          service.image = image || _.get(skill, '[0].image');
+
           return new Services(service).save(null, {transacting: trx})
           .then(function(serviceAdded) { 
             console.log(serviceAdded, 'sdfksdlfsadfsda')
@@ -222,7 +227,6 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
           });
         });
       })
-
       .then(trx.commit)
       .catch(trx.rollback);
     })
@@ -232,11 +236,31 @@ resources.addWithServiceMembershipCalendar = function(user, r, s) {
     .catch(function(err) {
       console.log(JSON.stringify(err))
       reject({error: err})
-    });
+    })
+  });
   }); 
 
   return bookshelf.knex('resources').insert(resource).returning('*')
 };
+
+
+function addPhoto(photo) {
+  var photos = [photo];
+  var promises = _.map(JSON.parse(photos) || [], function(photo) {
+    var name = gym.name.replace(/ /g, '_')+'-'+Date.now();
+    return cloudinary(photo, name)
+  });
+
+  return BluebirdPromise.all(promises).then(function(photos) {
+    return _.map(photos, function(img) {
+      return {
+        _id: uuid.v4(),
+        url: img,
+        default: false
+      }
+    });
+  });
+}
 
 
 
