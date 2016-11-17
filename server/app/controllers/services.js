@@ -125,24 +125,26 @@ services.updateById = function(id, params) {
 
 
 services.addService = function(user, s, resourceId) {
-  console.log(s)
   const {service} = formatServiceAndResource(user, s);
   return new BluebirdPromise(async function(resolve, reject) {
     let image;
-    try {
-      image = await addPhoto(service.image, service.service_name);
-      image = image[0]
-    } catch(err) {
-      console.log(err)
+    if (service.image) {
+      try {
+        image = await addPhoto(service.image, service.service_name);
+        image = image[0]
+      } catch(err) {
+        reject('')
+      }
     }
     bookshelf.knex.transaction(function(trx) {
-      return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id').then(function(role) {
+      bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id').then(function(role) {
         role = _.get(role, '[0].id');
         if (!role) { throw new Error({error: 'role does not exist'})}
         return bookshelf.knex('memberships').transacting(trx).where({membership_role_id: role, membership_user_id: Number(user)}).returning('id').then(function(membership) {
-          if (!membership) { throw new Error({error: 'membership does not exist'})}
+          if (!membership) { throw new Error('membership does not exist')}
           membership = _.get(membership, '[0].id');
-          return bookshelf.knex('skills').transacting(trx).where('id', '=', service.service_skill_id).then(function(skill) {
+          return bookshelf.knex('skills').transacting(trx).where('id', '=', service.service_skill_id)
+          .then(function(skill) {
             service.service_resource_id = Number(resourceId);
             service.service_skill_id = _.get(skill, '[0].id');
             service.image = image || _.get(skill, '[0].image');
@@ -160,11 +162,13 @@ services.addService = function(user, s, resourceId) {
               } 
               return new Calendars(calendar).save(null, {transacting: trx});
             });
-
           });
       })
       .then(trx.commit)
-      .catch(trx.rollback);
+      .catch((err) => {
+        throw new Error(err);
+        trx.rollback
+      });
       })
 
 
@@ -172,7 +176,6 @@ services.addService = function(user, s, resourceId) {
         resolve({success: true})
       })
       .catch(function(err) {
-        // console.log(err)
         reject({error: err})
       });
 
@@ -183,11 +186,9 @@ services.addService = function(user, s, resourceId) {
 
 
 function addPhoto(photo, name) {
-  console.log(photo)
   var photos = [photo];
   var promises = _.map(photos, function(photo) {
     name = name.replace(/ /g, '_')+'-'+Date.now();
-    console.log(photo, name)
     return cloudinary(photo, name)
   });
 
