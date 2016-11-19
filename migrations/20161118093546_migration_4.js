@@ -14,7 +14,7 @@ exports.up = function(knex, Promise) {
       table.timestamp('delete_date')
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
-
+      table.text('timezone');
       table.jsonb('facebook_credentials') //REMOVE
       table.string('facebook_user_id') //REMOVE
     }),
@@ -50,6 +50,9 @@ exports.up = function(knex, Promise) {
       table.increments();
       table.integer('address_resource_id').references('resources.id').notNullable();
       table.specificType('point', 'geometry(point, 4326)');
+      table.string('name');
+      table.string('icon');
+      table.string('google_id');
       table.string('street_address_1');
       table.string('street_address_2');
       table.string('city');
