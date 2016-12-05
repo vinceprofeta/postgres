@@ -99,6 +99,7 @@ bookings.getById = function(id) {
 
 bookings.add = function(data) {
   // TODO add required on calendar
+  // TODO user only enrolled once?
   return new Promise(async function(resolve, reject) {
     var user = data.user;
     var params = data.calendar;
@@ -111,7 +112,7 @@ bookings.add = function(data) {
 
       const noConflicts = await availability.isUserAvailableForBooking({start: params.start, end: params.end, agent: calendar.calendar_agent_id})
       if (!noConflicts) {
-        reject({error: 'A booking already exists in the time slot'});
+        reject({error: 'the instructor is no longer available at this time.'});
         return;
       }
     

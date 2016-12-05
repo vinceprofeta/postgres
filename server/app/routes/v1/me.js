@@ -21,6 +21,7 @@ var Transactions = require('../../controllers/transactions');
 var Favorites = require('../../controllers/favorites');
 var Memberships = require('../../controllers/memberships');
 var Availability = require('../../controllers/availability');
+var StripeActions = require('../../controllers/stripeActions');
 
 var ResourcesController = require('../../controllers/resources');
 
@@ -304,6 +305,26 @@ router.route('/calendars')
       console.log('error missing data')
       res.status(422).json();
     }
+  });
+
+
+
+
+  router.route('/add-card')
+  .post(async function(req, res) {
+    let customer;
+    const token = _.get(req.body, 'stripeToken');
+    const user = await Users.getById(req.decoded._id);
+
+    if (user && !user.stripe_customer_id) {
+       customer = await StripeActions.addCustomer(user, token);
+       console.log(customer, '4323423423')
+    } else {
+      const newCard = await StripeActions.addCard(token, user.stripe_customer_id, user)
+      console.log(newCard, 'fsadfkjasdlkfjasfdlkjas43124123')
+      Users.updateById(req.decoded._id, {stripe_customer_id: newCard.id})
+    }
+
   });
 
 

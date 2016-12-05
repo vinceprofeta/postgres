@@ -65,6 +65,10 @@ users.updateById = function(id, params) {
     updatedObj.facebook_credentials = params.facebook_credentials;
   }
 
+  if (params.stripe_customer_id) {
+    updatedObj.stripe_customer_id = params.stripe_customer_id;
+  }
+
   return bookshelf.knex('users')
   .where('id', '=', id)
   .update(updatedObj)
@@ -148,107 +152,6 @@ users.updateMembership = function(params) {
 
   return bookshelf.knex('memberships').where('membership_user_id', params.user).update(updatedObj).returning('*')
 };
-
-
-
-
-
-
-// users.getBookedInstructorSessions = function(obj) {
-//   var startDate = obj.start;
-//   var endDate = obj.end;
-//   var id = obj.id;
-//   var limit = obj.limit;
-//   var offset = obj.offset;
-//   var showCancelled = obj.showCancelled;
-
-//   return Sessions.find({
-//     complete: { $exists: false },
-//     removed: { $exists: false },
-//     dismissed: {
-//       $nin: [id]
-//     },
-//     $and : [
-//       {$or: [ 
-//         { cancelled: { $exists: false } }, 
-//         {$and: [ 
-//           { date: { $gte: startDate } }, 
-//           { cancelled: { $exists: !!showCancelled } } // mark as true if you want to see cancelled
-//         ]} 
-//       ]},
-//       {$or: [ 
-//         { instructor: id }, 
-//         { enrolled: { $in: [id] } } 
-//       ]}
-//     ],
-//     $or: [ 
-//       { $where: "this.enrolled.length > 0"}, 
-//       { private: { $ne: true } } 
-//     ],
-//     date: {
-//       $lte: endDate
-//     }
-//   })
-//   .populate('instructor')
-//   .populate('location')
-//   .populate('enrolled')
-//   .limit(limit || 100)
-//   .skip(offset || 0)
-//   .sort({date: 1, "dateAndTime" : 1})
-//   .exec(function(err, sessions) {
-//     return sessions;
-//   });
-// };
-
-
-// users.getSessions = function(obj) {
-//   var startDate = obj.start;
-//   var endDate = obj.end;
-//   var id = obj.id;
-//   var limit = obj.limit;
-//   var offset = obj.offset;
-//   var notComplete = obj.notComplete;
-//   var query = {
-//     enrolled: {
-//       $in: [id]
-//     },
-//     dismissed: {
-//       $nin: [id]
-//     },
-//     removed: { $exists: false }
-//   };
-
-//   if (startDate && endDate) {
-//     query.date = {
-//       $gte: startDate,
-//       $lte: endDate
-//     }
-//   }
-
-//   if (notComplete) {
-//     query.complete = { $exists: false };
-//   } 
-
-//   return Sessions.find(query)
-//     .populate('listing')
-//     .limit(limit || 100)
-//     .skip(offset || 0)
-//     .sort({"dateAndTime" : 1})
-//     .exec(function(err, sessions) {
-//       return sessions;
-//     });
-// };
-
-
-
-// users.getPaymentMethod = function(id) {
-//   var query = 'paymentMethod name';
-//   return Users.findOne({ _id: id }, query)
-//     .populate('paymentMethod')
-//     .exec(function(err, paymentMethod) {
-//       return paymentMethod;
-//     });
-// };
 
 
 

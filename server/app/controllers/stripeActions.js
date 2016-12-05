@@ -5,7 +5,7 @@ var stripe = require('stripe')(process.env.STRIPE_SECRET);
 var BluebirdPromise = require('bluebird');
 
 // Models
-var PaymentMethods //= require('../models/paymentMethods');
+var PaymentMethods = require('../models/paymentMethods');
 var Users //= require('../models/users');
 
 var stripeActions = {};
@@ -16,52 +16,57 @@ stripeActions.addCustomer = function(user, token) {
       if (err) { reject(err); }
 
       stripe.customers.create({
-        description: user.name.first + ' ' + user.name.last + ' - ' + user.email,
+        description: user.first_name + ' ' + user.last_name,
         source: card.id // obtained with Stripe.js
       },
       function(err, customer) {
         if (err) {
           reject(err)
         } else {
-          var paymentMethod = new PaymentMethods({
+          var paymentMethod = {
+            user_id: user.id,
             customer: customer.id,
             card: card,
             processor_id: card.id,
             processor: 'stripe'
-          });
+          };
 
-          paymentMethod.save(function(err, method) {
+          paymentMethod = new PaymentMethods(paymentMethod).save().then(function(err, method) {
             if(err) {
               reject(err)
             }else{
-              resolve(method)
+              resolve(_.get(method, 'attributes'))
             }
           });
+
         }
       });
     });
   });
 }
 
-stripeActions.addCard = function(token, customerId) {
+stripeActions.addCard = function(token, customerId, user) {
   return new BluebirdPromise(function(resolve, reject) {
     stripe.tokens.retrieve(token, function(err, card) {
       if (err) {
         reject(err);
       } else {
         stripe.customers.update(customerId, {source: card.id}, function(err, customer) { 
-          var paymentMethod = new PaymentMethods({
+          var paymentMethod = {
+            user_id: user.id,
             customer: customerId,
             card: card,
             processor_id: card.id,
             processor: 'stripe'
-          });
+          };
 
-          paymentMethod.save(function(err, method) {
+          console.log(paymentMethod, 'asdfsdafsadf')
+
+          paymentMethod = new PaymentMethods(paymentMethod).save().then(function(err, method) {
             if(err) {
               reject(err)
             }else{
-              resolve(method)
+              resolve(_.get(method, 'attributes'))
             }
           });
           
