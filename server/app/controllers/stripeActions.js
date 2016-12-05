@@ -5,7 +5,8 @@ var stripe = require('stripe')(process.env.STRIPE_SECRET);
 var BluebirdPromise = require('bluebird');
 
 // Models
-var PaymentMethods = require('../models/paymentMethods');
+var bookshelf = require('../../db/bookshelf');
+var PaymentMethods = bookshelf.model('paymentMethods');
 var Users //= require('../models/users');
 
 var stripeActions = {};
@@ -14,9 +15,8 @@ stripeActions.addCustomer = function(user, token) {
   return new BluebirdPromise(function(resolve, reject) {
     stripe.tokens.retrieve(token, function(err, card) {
       if (err) { reject(err); }
-
       stripe.customers.create({
-        description: user.first_name + ' ' + user.last_name,
+        description: user.first_name + ' ' + user.last_name + ' -'+ user.id,
         source: card.id // obtained with Stripe.js
       },
       function(err, customer) {
@@ -31,13 +31,11 @@ stripeActions.addCustomer = function(user, token) {
             processor: 'stripe'
           };
 
-          paymentMethod = new PaymentMethods(paymentMethod).save().then(function(err, method) {
-            if(err) {
-              reject(err)
-            }else{
-              resolve(_.get(method, 'attributes'))
-            }
-          });
+          paymentMethod = new PaymentMethods(paymentMethod).save().then(function(method) {
+            resolve(_.get(method, 'attributes'))
+          }).catch(function(method) {
+            reject()
+          })
 
         }
       });
@@ -60,16 +58,12 @@ stripeActions.addCard = function(token, customerId, user) {
             processor: 'stripe'
           };
 
-          console.log(paymentMethod, 'asdfsdafsadf')
+          paymentMethod = new PaymentMethods(paymentMethod).save().then(function(method) {
+            resolve(_.get(method, 'attributes'))
+          }).catch(function(method) {
+            reject(err)
+          })
 
-          paymentMethod = new PaymentMethods(paymentMethod).save().then(function(err, method) {
-            if(err) {
-              reject(err)
-            }else{
-              resolve(_.get(method, 'attributes'))
-            }
-          });
-          
         });
       }
     });

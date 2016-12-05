@@ -312,17 +312,20 @@ router.route('/calendars')
 
   router.route('/add-card')
   .post(async function(req, res) {
-    let customer;
-    const token = _.get(req.body, 'stripeToken');
-    const user = await Users.getById(req.decoded._id);
+    try {
+      let newCard;
+      const token = _.get(req.body, 'stripeToken');
+      const user = await Users.getById(req.decoded._id);
 
-    if (user && !user.stripe_customer_id) {
-       customer = await StripeActions.addCustomer(user, token);
-       console.log(customer, '4323423423')
-    } else {
-      const newCard = await StripeActions.addCard(token, user.stripe_customer_id, user)
-      console.log(newCard, 'fsadfkjasdlkfjasfdlkjas43124123')
-      Users.updateById(req.decoded._id, {stripe_customer_id: newCard.id})
+      if (user && user.attributes && !user.attributes.stripe_customer_id) {
+         newCard = await StripeActions.addCustomer(user.attributes, token);
+      } else {
+        newCard = await StripeActions.addCard(token, user.stripe_customer_id, user)
+      }
+      await Users.updateById(newCard.user_id, {stripe_customer_id: newCard.card.id});
+      res.json(newCard.id);
+    } catch(err) {
+      res.status(422).json({error: err});
     }
 
   });
