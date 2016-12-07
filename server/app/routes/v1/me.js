@@ -96,8 +96,9 @@ router.route('/bookings/:id')
 router.route('/bookings')
   .get(function(req, res) {
     var query = req.query || {};
-    query.id = req.decoded._id;
-    if (true) { //req.query && req.query.role !== 'user'
+    query.user = req.decoded._id;
+    if (req.query.role === 'agent') {
+      query.agent = req.decoded._id;
       Bookings
         .getBookings(query)
         .then(function(bookings) {
@@ -109,42 +110,15 @@ router.route('/bookings')
         });
 
     } else {
-      query.notComplete = true;
-      Users
-        .getSessions(query)
+      Bookings
+        .getUsersBookings(query)
         .then(function(bookings) {
           res.json(bookings);
         });
     }
 
   })
-  .post(function(req, res) {
-    var session;
-    if (req.body.session) {
-      try {
-        session = JSON.parse(req.body.session);
-        console.log(session)
-        session.instructor = req.decoded._id;
-      } catch(err) {
-        console.log(err)
-        res.status(422).json({error: 'invalid format'});
-        return;
-      }
-      Sessions
-        .add(session)
-        .then(function(response) {
-          res.json(response);
-        })
-        .catch(function(err) {
-          console.log(err)
-          res.status(422).json(err);
-        });
-    }
-  })
-  
-
-router.route('/sessions/enroll')
-  .put(async function(req, res) {   
+  .post(async function(req, res) {
     var calendars = req.body.calendars || [];
     calendars = JSON.parse(calendars);
     try {
@@ -153,8 +127,6 @@ router.route('/sessions/enroll')
     } catch(err) {
       res.status(422).json(err);
     }
-
-
 
     // Transactions.getTransactions(req.decoded._id, 1, 0, null, null, null, true)
     // .then(function(failedTransactions) {
@@ -181,9 +153,8 @@ router.route('/sessions/enroll')
     // .catch(function(err) {
     //   res.status(422).json(err);
     // });
-  });
-
-
+  })
+  
 
 router.route('/calendars/favorites')
   .get(function(req, res) {
@@ -237,19 +208,19 @@ router.route('/calendars')
 
 
 
-  router.route('/listings/:id/sessions/batch')
-  .post(function(req, res) {
-    var times;
-    try {
-      times = JSON.parse(req.body.sessions).times 
-    } catch(err) {
-      res.status(422).json(err);
-    }
-    Listings.addSessionsForListing(req.params.id, times)
-    .then(function(response) {
-      res.json(response);
-    });
-  });
+  // router.route('/listings/:id/sessions/batch')
+  // .post(function(req, res) {
+  //   var times;
+  //   try {
+  //     times = JSON.parse(req.body.sessions).times 
+  //   } catch(err) {
+  //     res.status(422).json(err);
+  //   }
+  //   Listings.addSessionsForListing(req.params.id, times)
+  //   .then(function(response) {
+  //     res.json(response);
+  //   });
+  // });
 
 
 
@@ -310,7 +281,15 @@ router.route('/calendars')
 
 
 
-  router.route('/add-card')
+  router.route('/payment-methods')
+  .get(async function(req, res) {
+    try {
+      const paymentMethods = await Users.getPaymentMethods(req.decoded._id);
+      res.json(paymentMethods);
+    } catch(err) {
+      res.status(422).json({error: err});
+    }
+  })
   .post(async function(req, res) {
     try {
       let newCard;
@@ -327,7 +306,9 @@ router.route('/calendars')
     } catch(err) {
       res.status(422).json({error: err});
     }
-
+  })
+  .delete(async function(req, res) {
+    // TODO
   });
 
 

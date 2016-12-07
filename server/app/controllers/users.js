@@ -6,6 +6,7 @@ var _ = require('lodash');
 var bookshelf = require('../../db/bookshelf');
 var Users = bookshelf.model('users');
 var Memberships = bookshelf.model('memberships');
+var PaymentMethods = bookshelf.model('paymentMethods');
 
 var users = {};
 
@@ -143,7 +144,6 @@ users.getMemberships = function(id) {
 
 };
 
-
 users.updateMembership = function(params) {
   var updatedObj = {};
   if (params.status) {
@@ -152,6 +152,12 @@ users.updateMembership = function(params) {
 
   return bookshelf.knex('memberships').where('membership_user_id', params.user).update(updatedObj).returning('*')
 };
+
+
+users.getPaymentMethods = function(id) {
+  return PaymentMethods.where('user_id', id).fetchAll({})
+};
+
 
 
 

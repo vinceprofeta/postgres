@@ -22,6 +22,7 @@ var skills = require('./skills');
 var calendars = require('./calendars');
 var resources = require('./resources');
 var services = require('./services');
+var webhooks = require('./webhooks');
 
 router.use(cors());
 
@@ -38,5 +39,7 @@ router.use('/conversations', conversations);
 router.use('/chats', chats); 
 router.use('/resources', resources);
 router.use('/services', services);
+router.use('/webhooks', webhooks);
+
 
 module.exports = router;

@@ -18,19 +18,8 @@ bookings.getAll = function(limit, offset) {
 
 bookings.getBookings = function(query) {
   query = query || {}
-  var  queryObject = {
-    // bookings_resource_id: query.resource,
-    // bookings_agent_id: query.agent,
-    booking_calendar_id: query.service,
-    
-    booking_capacity: query.capacity,
-    bookingPrice: query.price,
-    booking_status: query.status,
-
-    // TODO BEFORE AND AFTER QUERIES
-    start:query.start, // moment.utc(query.start).format(),
-    end: query.end //moment.utc(query.end).format()
-  };
+  query.status = query.status || ''
+  const status = query.status.split(',').map(function (ele) { return "'" + ele + "'"; }).join(',');
 
   return bookshelf.knex.raw(`
     select sv.image, sv.service_name, bk.*, us.first_name, us.last_name,
@@ -51,19 +40,52 @@ bookings.getBookings = function(query) {
     on sv.id = cd.calendar_service_id
     inner join users us
     on cd.calendar_agent_id = us.id
-  `).then((result) => {
-    console.log(result.rows)
+    where bk.bookings_agent_id = '${query.agent}'
+    and bk.booking_status in (${status})
+    and bk.start > '${query.start}'::timestamp and bk.start < '${query.end}'::timestamp
+    order by bk.start asc
+  `)
+  .then((result) => {
     return result.rows
   })
 
-  return Bookings.where(_.pickBy(queryObject, _.identity)).fetchAll({
-    // withRelated: ['resource', 'skill'],
-  })
   // .limit(query.limit || 10)
   // .skip(query.offset || 0)
   // .populate('instructor skill')
 
 };
+
+bookings.getUsersBookings = function(query) {
+  query = query || {}
+  query.status = query.status || ''
+  const status = query.status.split(',').map(function (ele) { return "'" + ele + "'"; }).join(',');
+  return bookshelf.knex.raw(`
+    select * from bookings bk
+    where bk.booking_status in (${status})
+    and bk.start > '${query.start}'::timestamp and bk.start < '${query.end}'::timestamp
+    and bk.id in (
+      select eu.booking_id from "enrolledUsers" eu 
+      where eu.booking_user_id = '${query.user}'
+    )
+    order by bk.start asc
+  `)
+  .then((result) => {
+    return result.rows
+  })
+}
+
+
+bookings.getBookingsNeededForCompletion = function(query) {
+  query = query || {}
+  return bookshelf.knex.raw(`
+    select * from bookings bk
+    where bk.bookings_agent_id = '${query.agent}'
+    and bk.end < '${query.end}'::timestamp
+  `)
+  .then((result) => {
+    return result.rows
+  })
+}
 
 
 bookings.getById = function(id) {
@@ -120,7 +142,7 @@ bookings.add = function(data) {
         booking_calendar_id: calendar.id,
         bookings_agent_id: calendar.calendar_agent_id,
         booking_capacity: calendar.calendar_capacity || calendar.service_capacity,
-        booking_status: '',
+        booking_status: 'upcoming',
         start: params.start, //moment.utc(params.start).format(),
         end: params.end //moment.utc(params.end).format()
       };
@@ -161,8 +183,8 @@ bookings.updateById = function(id, params) {
   if (params.end) {
     updatedObj.end = moment.utc(params.end).format();
     // SEND PUSH AND UPDATE USERS
+    // TODO check to make sure this new time is available
   }
-
 
   if (params.status) {
     updatedObj.status = params.status;
