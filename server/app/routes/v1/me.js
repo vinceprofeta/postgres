@@ -78,20 +78,6 @@ router.route('/')
       });
   });
 
-router.route('/bookings/:id')
-  .get(function(req, res) {
-    Bookings
-    .getById(req.params.id)
-    .then(function(booking) {
-      console.log(booking)
-      res.json(booking);
-    })
-    .catch(function(err) {
-      console.log(err)
-      res.status(422).json(err);
-    });
-  })
-
 
 router.route('/bookings')
   .get(function(req, res) {
@@ -153,6 +139,46 @@ router.route('/bookings')
     // .catch(function(err) {
     //   res.status(422).json(err);
     // });
+  })
+
+
+  router.route('/bookings/needs-complete')
+  .get(async function(req, res) {
+    try {
+      const bookings = await Bookings.getBookingsThatNeedCompletion({date: req.query.date, agent: req.decoded._id})  
+      console.log(bookings)
+      res.json(bookings);
+    } catch(err) {
+      console.log(err)
+      res.status(422).json(err);
+    };
+  })
+
+  router.route('/bookings/needs-review')
+  .get(async function(req, res) {
+    try {
+      const bookings = await Bookings.getBookingsForReview({date: req.query.date, agent: req.decoded._id})  
+      console.log(bookings)
+      res.json(bookings);
+    } catch(err) {
+      console.log(err)
+      res.status(422).json(err);
+    };
+  })
+
+
+  router.route('/bookings/:id')
+  .get(function(req, res) {
+    Bookings
+    .getById(req.params.id)
+    .then(function(booking) {
+      console.log(booking)
+      res.json(booking);
+    })
+    .catch(function(err) {
+      console.log(err)
+      res.status(422).json(err);
+    });
   })
   
 

@@ -17,7 +17,6 @@ exports.up = function(knex, Promise) {
       table.text('timezone');
       table.jsonb('facebook_credentials') //REMOVE
       table.string('facebook_user_id') //REMOVE
-      table.string('stripe_customer_id') //REMOVE
     }),
 
     // ________________________________________________________

@@ -75,12 +75,12 @@ bookings.getUsersBookings = function(query) {
 }
 
 
-bookings.getBookingsNeededForCompletion = function(query) {
+bookings.getBookingsThatNeedCompletion = function(query) {
   query = query || {}
   return bookshelf.knex.raw(`
     select * from bookings bk
     where bk.bookings_agent_id = '${query.agent}'
-    and bk.end < '${query.end}'::timestamp
+    and bk.end < '${query.date}'::timestamp
   `)
   .then((result) => {
     return result.rows
