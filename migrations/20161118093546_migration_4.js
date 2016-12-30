@@ -17,6 +17,7 @@ exports.up = function(knex, Promise) {
       table.text('timezone');
       table.jsonb('facebook_credentials') //REMOVE
       table.string('facebook_user_id') //REMOVE
+
     }),
 
     // ________________________________________________________
@@ -200,7 +201,10 @@ exports.up = function(knex, Promise) {
       table.string('status');
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
-
+      // status
+        // dopped
+        // enrolled
+        // paid
       // need an index to make sure we have either a booking or event id
     }),
 

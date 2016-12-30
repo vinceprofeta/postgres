@@ -4,8 +4,10 @@ createdb -Ovprofeta -Eutf8 postgres_test
 knex seed:run
  psql postgres_test
 
-
-
+have postgres db running
+start elasticsearch by running "elasticsearch"
+start rabbit by running ./sbin/rabbitmq-server from rabbit root
+npm start 
 
 # Boilerplate for a knex CRUD app
 

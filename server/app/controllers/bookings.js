@@ -80,7 +80,29 @@ bookings.getBookingsThatNeedCompletion = function(query) {
   return bookshelf.knex.raw(`
     select * from bookings bk
     where bk.bookings_agent_id = '${query.agent}'
+    and bk.booking_status != 'complete'
     and bk.end < '${query.date}'::timestamp
+  `)
+  .then((result) => {
+    return result.rows
+  })
+}
+
+bookings.getBookingsForReview = function(query) {
+  query = query || {}
+  query.status = query.status || ''
+  const status = query.status.split(',').map(function (ele) { return "'" + ele + "'"; }).join(',');
+  return bookshelf.knex.raw(`
+    select *
+    from bookings bk
+    join "enrolledUsers" eus 
+    on eus.booking_id = bk.id 
+    and eus.booking_user_id = '${query.agent}'
+    and eus.status = 'enrolled'
+    where bk.booking_status = 'complete'
+    and eus.status = 'enrolled'
+    
+    order by bk.start asc
   `)
   .then((result) => {
     return result.rows
@@ -152,7 +174,8 @@ bookings.add = function(data) {
           const bookingDb = await bookshelf.knex('bookings').insert(booking).transacting(trx).returning('*')
           const enrolled = await bookshelf.knex('enrolledUsers').insert({
             booking_id: bookingDb[0].id,
-            booking_user_id: user
+            booking_user_id: user,
+            status: 'enrolled'
           }).returning('*').transacting(trx)
           trx.commit
           resolve(enrolled)
@@ -201,6 +224,38 @@ bookings.updateById = function(id, params) {
   return bookshelf.knex('bookings')
   .where('id', '=', id)
   .update(updatedObj)
+};
+
+
+bookings.cancel = function(id, userId) {
+  // TODO - option to cancel after the fact
+  // user is instructor
+  return bookshelf.knex('bookings')
+  .where('id', '=', id)
+  .andWhere('bookings_agent_id', '=', userId)
+  .andWhere('start', '<', moment.utc().format())
+  .update({booking_status: 'cancelled'})
+};
+
+bookings.drop = async function(id, userId) {
+  // TODO
+  // cancellation fee?
+  // cancel booking if noone else is in booking
+  return bookshelf.knex('enrolledUsers')
+  .where('booking_id', '=', id)
+  .andWhere('booking_user_id', '=', userId)
+  .andWhere('start', '<', moment.utc().format())
+  .update({status: 'dropped'})
+};
+
+bookings.complete = async function(id, userId) {
+  // TODO
+  // push notifications
+  return bookshelf.knex('bookings')
+  .where('id', '=', id)
+  .andWhere('bookings_agent_id', '=', userId)
+  .andWhere('start', '>', moment.utc().format())
+  .update({status: 'complete'})
 };
 
 

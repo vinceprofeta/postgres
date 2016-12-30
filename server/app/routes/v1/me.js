@@ -180,6 +180,49 @@ router.route('/bookings')
       res.status(422).json(err);
     });
   })
+
+  router.route('/bookings/:id/drop')
+  .post(function(req, res) {
+    Bookings
+    .drop(req.params.id, req.decoded._id)
+    .then(function(drop) {
+      console.log(drop)
+      res.json(drop);
+    })
+    .catch(function(err) {
+      console.log(err)
+      res.status(422).json(err);
+    });
+  })
+
+  router.route('/bookings/:id/cancel')
+  .post(function(req, res) {
+    Bookings
+    .cancel(req.params.id, req.decoded._id)
+    .then(function(cancel) {
+      console.log(cancel)
+      res.json(cancel);
+    })
+    .catch(function(err) {
+      console.log(err)
+      res.status(422).json(err);
+    });
+  })
+
+
+  router.route('/bookings/:id/complete')
+  .post(function(req, res) {
+    Bookings
+    .complete(req.params.id, req.decoded._id)
+    .then(function(complete) {
+      console.log(complete)
+      res.json(complete);
+    })
+    .catch(function(err) {
+      console.log(err)
+      res.status(422).json(err);
+    });
+  })
   
 
 router.route('/calendars/favorites')
