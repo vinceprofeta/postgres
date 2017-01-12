@@ -32,7 +32,7 @@ router.route('/calendars').get(function (req, res) {
 
 router.route('/popular').get(function (req, res) {
   ServicesController.getPopularServices(req.query).then(function (resources) {
-    res.json(resources);
+    res.json(resources.rows);
   }).catch(function (err) {
     res.status(422).json(err);
   });

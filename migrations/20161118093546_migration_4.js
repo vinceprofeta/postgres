@@ -154,7 +154,7 @@ exports.up = function(knex, Promise) {
 
     knex.schema.createTable('bookings', function(table) {
       table.increments();
-      table.integer('bookings_agent_id').references('users.id').notNullable();
+      table.integer('booking_agent_id').references('users.id').notNullable();
       table.integer('booking_calendar_id').references('calendars.id').notNullable();
 
       table.dateTime('start').notNullable();
@@ -202,7 +202,7 @@ exports.up = function(knex, Promise) {
       table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
       table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
       // status
-        // dopped
+        // dropped
         // enrolled
         // paid
       // need an index to make sure we have either a booking or event id

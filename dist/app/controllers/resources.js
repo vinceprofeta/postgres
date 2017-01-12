@@ -5,6 +5,7 @@ var uuid = require('node-uuid');
 var moment = require('moment');
 var _ = require('lodash');
 var formatServiceAndResource = require('../utils/formatServiceAndResource.js');
+var cloudinary = require('../utils/cloudinary');
 
 var bookshelf = require('../../db/bookshelf');
 var knex = require('../../db/knex');
@@ -171,54 +172,77 @@ resources.addWithServiceMembershipCalendar = function (user, r, s) {
   var service = _formatServiceAndReso.service;
 
   return new BluebirdPromise(function (resolve, reject) {
-    bookshelf.knex.transaction(function (trx) {
+    console.log('IMAGEEEEEE ONE');
+    addPhoto(service.image).then(function (image) {
+      console.log('IMAGEEEEEE', image);
+      bookshelf.knex.transaction(function (trx) {
 
-      bookshelf.knex('resources').transacting(trx).insert(resource).returning('id').then(function (resourceAdded) {
-        resourceAdded = _.get(resourceAdded, '[0]');
+        bookshelf.knex('resources').transacting(trx).insert(resource).returning('id').then(function (resourceAdded) {
+          resourceAdded = _.get(resourceAdded, '[0]');
 
-        return bookshelf.knex('skills').transacting(trx).where('id', '=', service.service_skill_id).then(function (skill) {
+          return bookshelf.knex('skills').transacting(trx).where('id', '=', service.service_skill_id).then(function (skill) {
 
-          service.service_resource_id = resourceAdded;
-          service.service_skill_id = _.get(skill, '[0].id');
-          service.image = service.image || _.get(skill, '[0].image');
+            service.service_resource_id = resourceAdded;
+            service.service_skill_id = _.get(skill, '[0].id');
+            service.image = image || _.get(skill, '[0].image');
 
-          return new Services(service).save(null, { transacting: trx }).then(function (serviceAdded) {
-            serviceAdded = _.get(serviceAdded, 'attributes');
+            return new Services(service).save(null, { transacting: trx }).then(function (serviceAdded) {
+              console.log(serviceAdded, 'sdfksdlfsadfsda');
+              serviceAdded = _.get(serviceAdded, 'attributes');
 
-            return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id').then(function (role) {
-              role = _.get(role, '[0].id');
-              if (!role) {
-                throw new Error({ error: 'role does not exist' });
-              }
-              return bookshelf.knex('memberships').transacting(trx).insert({
-                membership_role_id: role,
-                status: 'approved',
-                membership_resource_id: Number(resourceAdded),
-                membership_user_id: Number(user)
-              }).returning('*').then(function (membership) {
-                var calendar = {
-                  calendar_agent_id: Number(user),
-                  calendar_service_id: Number(serviceAdded.id),
-                  // calendar_resource_id: Number(resourceAdded),
-                  point: service.point || resource.point,
-                  calendar_capacity: service.capacity, //REMOVEABLE
-                  calendar_price: service.price // REMOVEABLE
-                };
-                return new Calendars(calendar).save(null, { transacting: trx });
+              return bookshelf.knex('roles').transacting(trx).where('role_name', '=', 'resource-admin').returning('id').then(function (role) {
+                role = _.get(role, '[0].id');
+                if (!role) {
+                  throw new Error({ error: 'role does not exist' });
+                }
+                return bookshelf.knex('memberships').transacting(trx).insert({
+                  membership_role_id: role,
+                  status: 'approved',
+                  membership_resource_id: Number(resourceAdded),
+                  membership_user_id: Number(user)
+                }).returning('*').then(function (membership) {
+                  var calendar = {
+                    calendar_agent_id: Number(user),
+                    calendar_service_id: Number(serviceAdded.id),
+                    // calendar_resource_id: Number(resourceAdded),
+                    point: service.point || resource.point,
+                    calendar_capacity: service.capacity, //REMOVEABLE
+                    calendar_price: service.price // REMOVEABLE
+                  };
+                  return new Calendars(calendar).save(null, { transacting: trx });
+                });
               });
             });
           });
-        });
-      }).then(trx.commit).catch(trx.rollback);
-    }).then(function (resp) {
-      resolve({ success: true });
-    }).catch(function (err) {
-      // console.log(err)
-      reject({ error: err });
+        }).then(trx.commit).catch(trx.rollback);
+      }).then(function (resp) {
+        resolve({ success: true });
+      }).catch(function (err) {
+        console.log(JSON.stringify(err));
+        reject({ error: err });
+      });
     });
   });
 
   return bookshelf.knex('resources').insert(resource).returning('*');
 };
+
+function addPhoto(photo) {
+  var photos = [photo];
+  var promises = _.map(JSON.parse(photos) || [], function (photo) {
+    var name = gym.name.replace(/ /g, '_') + '-' + Date.now();
+    return cloudinary(photo, name);
+  });
+
+  return BluebirdPromise.all(promises).then(function (photos) {
+    return _.map(photos, function (img) {
+      return {
+        _id: uuid.v4(),
+        url: img,
+        default: false
+      };
+    });
+  });
+}
 
 module.exports = resources;

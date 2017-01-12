@@ -22,40 +22,62 @@ bookings.getAll = function (limit, offset) {
 
 bookings.getBookings = function (query) {
   query = query || {};
-  var queryObject = {
-    // bookings_resource_id: query.resource,
-    // bookings_agent_id: query.agent,
-    booking_calendar_id: query.service,
+  query.status = query.status || '';
+  var status = query.status.split(',').map(function (ele) {
+    return "'" + ele + "'";
+  }).join(',');
 
-    booking_capacity: query.capacity,
-    bookingPrice: query.price,
-    booking_status: query.status,
-
-    // TODO BEFORE AND AFTER QUERIES
-    start: moment.utc(query.start).format(),
-    end: moment.utc(query.end).format()
-  };
-
-  return bookshelf.knex.raw('\n    select sv.*, bk.*, cd.*, us.first_name, us.last_name\n    from bookings bk\n    inner join calendars cd\n    on cd.id = bk.id\n    inner join services sv\n    on sv.id = cd.calendar_service_id\n    inner join users us\n    on cd.calendar_agent_id = us.id\n    where cd.id = bk.booking_calendar_id\n  ').then(function (result) {
+  return bookshelf.knex.raw('\n    select sv.image, sv.service_name, bk.*, us.first_name, us.last_name,\n    (SELECT array_to_json(array_agg(row_to_json(sub)))\n      FROM ( \n        select eu.id, eu.first_name from\n        "enrolledUsers" euj\n        inner join users eu\n        on eu.id = euj.booking_user_id\n        WHERE bk.id = euj.booking_id\n      ) as sub\n    ) AS enrolled\n\n    from bookings bk\n    inner join calendars cd\n    on cd.id = bk.booking_calendar_id\n    inner join services sv\n    on sv.id = cd.calendar_service_id\n    inner join users us\n    on cd.calendar_agent_id = us.id\n    where bk.bookings_agent_id = \'' + query.agent + '\'\n    and bk.booking_status in (' + status + ')\n    and bk.start > \'' + query.start + '\'::timestamp and bk.start < \'' + query.end + '\'::timestamp\n    order by bk.start asc\n  ').then(function (result) {
     return result.rows;
   });
 
-  return Bookings.where(_.pickBy(queryObject, _.identity)).fetchAll({
-    // withRelated: ['resource', 'skill'],
-  });
   // .limit(query.limit || 10)
   // .skip(query.offset || 0)
   // .populate('instructor skill')
 };
 
+bookings.getUsersBookings = function (query) {
+  query = query || {};
+  query.status = query.status || '';
+  var status = query.status.split(',').map(function (ele) {
+    return "'" + ele + "'";
+  }).join(',');
+  return bookshelf.knex.raw('\n    select * from bookings bk\n    where bk.booking_status in (' + status + ')\n    and bk.start > \'' + query.start + '\'::timestamp and bk.start < \'' + query.end + '\'::timestamp\n    and bk.id in (\n      select eu.booking_id from "enrolledUsers" eu \n      where eu.booking_user_id = \'' + query.user + '\'\n    )\n    order by bk.start asc\n  ').then(function (result) {
+    return result.rows;
+  });
+};
+
+bookings.getBookingsThatNeedCompletion = function (query) {
+  query = query || {};
+  return bookshelf.knex.raw('\n    select * from bookings bk\n    where bk.bookings_agent_id = \'' + query.agent + '\'\n    and bk.booking_status != \'complete\'\n    and bk.end < \'' + query.date + '\'::timestamp\n  ').then(function (result) {
+    return result.rows;
+  });
+};
+
+bookings.getBookingsForReview = function (query) {
+  query = query || {};
+  query.status = query.status || '';
+  var status = query.status.split(',').map(function (ele) {
+    return "'" + ele + "'";
+  }).join(',');
+  return bookshelf.knex.raw('\n    select *\n    from bookings bk\n    join "enrolledUsers" eus \n    on eus.booking_id = bk.id \n    and eus.booking_user_id = \'' + query.agent + '\'\n    and eus.status = \'enrolled\'\n    where bk.booking_status = \'complete\'\n    and eus.status = \'enrolled\'\n    \n    order by bk.start asc\n  ').then(function (result) {
+    return result.rows;
+  });
+};
+
 bookings.getById = function (id) {
-  return Bookings.where('id', id).fetch({
-    // withRelated: ['resource', 'skill'],
+  return bookshelf.knex.raw('\n    select sv.image, sv.service_name, sv.image, row_to_json(cd) as calendar, bk.*, us.first_name, us.last_name, us.facebook_user_id,\n    (SELECT array_to_json(array_agg(row_to_json(sub)))\n      FROM ( \n        select eu.id, eu.first_name from\n        "enrolledUsers" euj\n        inner join users eu\n        on eu.id = euj.booking_user_id\n        WHERE bk.id = euj.booking_id\n      ) as sub\n    ) AS enrolled\n\n    from bookings bk\n    inner join calendars cd\n    on cd.id = bk.booking_calendar_id\n    inner join services sv\n    on sv.id = cd.calendar_service_id\n    inner join users us\n    on cd.calendar_agent_id = us.id\n    WHERE bk.id = ' + id + '\n  ').then(function (result) {
+    if (_.get(result, 'rows[0]')) {
+      return _.get(result, 'rows[0]');
+    } else {
+      throw new Error('Booking Not Found');
+    }
   });
 };
 
 bookings.add = function (data) {
   // TODO add required on calendar
+  // TODO user only enrolled once?
   return new Promise(function () {
     var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(resolve, reject) {
       var _this = this;
@@ -94,7 +116,7 @@ bookings.add = function (data) {
                           break;
                         }
 
-                        reject({ error: 'A booking already exists in the time slot' });
+                        reject({ error: 'the instructor is no longer available at this time.' });
                         return _context2.abrupt('return', {
                           v: void 0
                         });
@@ -104,9 +126,9 @@ bookings.add = function (data) {
                           booking_calendar_id: calendar.id,
                           bookings_agent_id: calendar.calendar_agent_id,
                           booking_capacity: calendar.calendar_capacity || calendar.service_capacity,
-                          booking_status: '',
-                          start: moment.utc(params.start).format(),
-                          end: moment.utc(params.end).format()
+                          booking_status: 'upcoming',
+                          start: params.start, //moment.utc(params.start).format(),
+                          end: params.end //moment.utc(params.end).format()
                         };
 
 
@@ -126,7 +148,8 @@ bookings.add = function (data) {
                                     _context.next = 6;
                                     return bookshelf.knex('enrolledUsers').insert({
                                       booking_id: bookingDb[0].id,
-                                      booking_user_id: user
+                                      booking_user_id: user,
+                                      status: 'enrolled'
                                     }).returning('*').transacting(trx);
 
                                   case 6:
@@ -211,6 +234,7 @@ bookings.updateById = function (id, params) {
   if (params.end) {
     updatedObj.end = moment.utc(params.end).format();
     // SEND PUSH AND UPDATE USERS
+    // TODO check to make sure this new time is available
   }
 
   if (params.status) {
@@ -227,5 +251,53 @@ bookings.updateById = function (id, params) {
 
   return bookshelf.knex('bookings').where('id', '=', id).update(updatedObj);
 };
+
+bookings.cancel = function (id, userId) {
+  // TODO - option to cancel after the fact
+  // user is instructor
+  return bookshelf.knex('bookings').where('id', '=', id).andWhere('bookings_agent_id', '=', userId).andWhere('start', '<', moment.utc().format()).update({ booking_status: 'cancelled' });
+};
+
+bookings.drop = function () {
+  var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(id, userId) {
+    return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      while (1) {
+        switch (_context4.prev = _context4.next) {
+          case 0:
+            return _context4.abrupt('return', bookshelf.knex('enrolledUsers').where('booking_id', '=', id).andWhere('booking_user_id', '=', userId).andWhere('start', '<', moment.utc().format()).update({ status: 'dropped' }));
+
+          case 1:
+          case 'end':
+            return _context4.stop();
+        }
+      }
+    }, _callee4, this);
+  }));
+
+  return function (_x4, _x5) {
+    return _ref3.apply(this, arguments);
+  };
+}();
+
+bookings.complete = function () {
+  var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(id, userId) {
+    return regeneratorRuntime.wrap(function _callee5$(_context5) {
+      while (1) {
+        switch (_context5.prev = _context5.next) {
+          case 0:
+            return _context5.abrupt('return', bookshelf.knex('bookings').where('id', '=', id).andWhere('bookings_agent_id', '=', userId).andWhere('start', '>', moment.utc().format()).update({ status: 'complete' }));
+
+          case 1:
+          case 'end':
+            return _context5.stop();
+        }
+      }
+    }, _callee5, this);
+  }));
+
+  return function (_x6, _x7) {
+    return _ref4.apply(this, arguments);
+  };
+}();
 
 module.exports = bookings;

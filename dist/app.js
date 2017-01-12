@@ -27,10 +27,10 @@ app.set('view engine', 'hbs');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json({ limit: "100mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }));
 
 app.use('/v1', routes);
 
@@ -64,36 +64,5 @@ app.use(function (err, req, res, next) {
     error: {}
   });
 });
-
-// var elastic = require('./app/elasticSearchIndexes/services-index.js');
-// var client = require('./elasticsearch.js');
-// client.search({  
-//   index: 'services_index',
-//   type: 'service',
-//   body: {
-//     query: {
-//       match: { "serviceDescription": "service description" }
-//     },
-//   }
-// },function (error, response,status) {
-//     if (error){
-//       console.log("search error: "+error)
-//     }
-//     else {
-//       console.log("--- Response ---");
-//       console.log(response);
-//       console.log("--- Hits ---");
-//       response.hits.hits.forEach(function(hit){
-//         console.log(hit);
-//       })
-//     }
-// });
-
-// elastic.indexExists('services_index').then(function (exists) {
-//   if (!exists) {
-//     return elastic.initIndex('services_index').then(elastic.initServiceMapping)
-//   }
-// })
-
 
 module.exports = app;

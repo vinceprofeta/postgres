@@ -41,7 +41,7 @@ calendars.getCalendarsBySkill = function (query) {
   // };
   return bookshelf.knex('services').where('service_skill_id', Number(query.skill)).join('calendars', 'services.id', '=', 'calendars.calendar_service_id')
   // .select('calendars.calendar_agent_id')
-  .join('users', 'calendars.calendar_agent_id', '=', 'users.id').select('calendars.calendar_price', 'calendars.calendar_agent_id', 'users.facebook_user_id', 'users.first_name', 'users.last_name', 'services.service_name', 'services.service_price', 'services.id', 'calendars.id as calendar_id');
+  .join('users', 'calendars.calendar_agent_id', '=', 'users.id').join('skills', 'services.service_skill_id', '=', 'skills.id').select('skills.image as skill_image', 'calendars.calendar_price', 'calendars.calendar_agent_id', 'users.facebook_user_id', 'users.first_name', 'users.last_name', 'services.image', 'services.service_name', 'services.service_price', 'services.id', 'calendars.id as calendar_id');
   // Calendars.where(_.pickBy(queryObject, _.identity)).fetchAll({
   //   withRelated: ['agent'], //'resource', 'service'
   // })

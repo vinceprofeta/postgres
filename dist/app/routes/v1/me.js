@@ -23,6 +23,7 @@ var Transactions = require('../../controllers/transactions');
 var Favorites = require('../../controllers/favorites');
 var Memberships = require('../../controllers/memberships');
 var Availability = require('../../controllers/availability');
+var StripeActions = require('../../controllers/stripeActions');
 
 var ResourcesController = require('../../controllers/resources');
 
@@ -65,41 +66,21 @@ router.route('/conversations').get(function (req, res) {
 
 router.route('/bookings').get(function (req, res) {
   var query = req.query || {};
-  query.id = req.decoded._id;
-  if (true) {
-    //req.query && req.query.role !== 'user'
+  query.user = req.decoded._id;
+  if (req.query.role === 'agent') {
+    query.agent = req.decoded._id;
     Bookings.getBookings(query).then(function (bookings) {
-      console.log(bookings);
       res.json(bookings);
-    });
-  } else {
-    query.notComplete = true;
-    Users.getSessions(query).then(function (bookings) {
-      res.json(bookings);
-    });
-  }
-}).post(function (req, res) {
-  var session;
-  if (req.body.session) {
-    try {
-      session = JSON.parse(req.body.session);
-      console.log(session);
-      session.instructor = req.decoded._id;
-    } catch (err) {
-      console.log(err);
-      res.status(422).json({ error: 'invalid format' });
-      return;
-    }
-    Sessions.add(session).then(function (response) {
-      res.json(response);
     }).catch(function (err) {
       console.log(err);
       res.status(422).json(err);
     });
+  } else {
+    Bookings.getUsersBookings(query).then(function (bookings) {
+      res.json(bookings);
+    });
   }
-});
-
-router.route('/sessions/enroll').put(function () {
+}).post(function () {
   var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(req, res) {
     var calendars, booking;
     return regeneratorRuntime.wrap(function _callee$(_context) {
@@ -139,6 +120,130 @@ router.route('/sessions/enroll').put(function () {
   };
 }());
 
+router.route('/bookings/needs-complete').get(function () {
+  var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(req, res) {
+    var bookings;
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            _context2.prev = 0;
+            _context2.next = 3;
+            return Bookings.getBookingsThatNeedCompletion({ date: req.query.date, agent: req.decoded._id });
+
+          case 3:
+            bookings = _context2.sent;
+
+            console.log(bookings);
+            res.json(bookings);
+            _context2.next = 12;
+            break;
+
+          case 8:
+            _context2.prev = 8;
+            _context2.t0 = _context2['catch'](0);
+
+            console.log(_context2.t0);
+            res.status(422).json(_context2.t0);
+
+          case 12:
+            ;
+
+          case 13:
+          case 'end':
+            return _context2.stop();
+        }
+      }
+    }, _callee2, this, [[0, 8]]);
+  }));
+
+  return function (_x3, _x4) {
+    return _ref2.apply(this, arguments);
+  };
+}());
+
+router.route('/bookings/needs-review').get(function () {
+  var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(req, res) {
+    var bookings;
+    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _context3.prev = 0;
+            _context3.next = 3;
+            return Bookings.getBookingsForReview({ date: req.query.date, agent: req.decoded._id });
+
+          case 3:
+            bookings = _context3.sent;
+
+            console.log(bookings);
+            res.json(bookings);
+            _context3.next = 12;
+            break;
+
+          case 8:
+            _context3.prev = 8;
+            _context3.t0 = _context3['catch'](0);
+
+            console.log(_context3.t0);
+            res.status(422).json(_context3.t0);
+
+          case 12:
+            ;
+
+          case 13:
+          case 'end':
+            return _context3.stop();
+        }
+      }
+    }, _callee3, this, [[0, 8]]);
+  }));
+
+  return function (_x5, _x6) {
+    return _ref3.apply(this, arguments);
+  };
+}());
+
+router.route('/bookings/:id').get(function (req, res) {
+  Bookings.getById(req.params.id).then(function (booking) {
+    console.log(booking);
+    res.json(booking);
+  }).catch(function (err) {
+    console.log(err);
+    res.status(422).json(err);
+  });
+});
+
+router.route('/bookings/:id/drop').post(function (req, res) {
+  Bookings.drop(req.params.id, req.decoded._id).then(function (drop) {
+    console.log(drop);
+    res.json(drop);
+  }).catch(function (err) {
+    console.log(err);
+    res.status(422).json(err);
+  });
+});
+
+router.route('/bookings/:id/cancel').post(function (req, res) {
+  Bookings.cancel(req.params.id, req.decoded._id).then(function (cancel) {
+    console.log(cancel);
+    res.json(cancel);
+  }).catch(function (err) {
+    console.log(err);
+    res.status(422).json(err);
+  });
+});
+
+router.route('/bookings/:id/complete').post(function (req, res) {
+  Bookings.complete(req.params.id, req.decoded._id).then(function (complete) {
+    console.log(complete);
+    res.json(complete);
+  }).catch(function (err) {
+    console.log(err);
+    res.status(422).json(err);
+  });
+});
+
 router.route('/calendars/favorites').get(function (req, res) {
   var queryObject = {
     user: req.decoded._id
@@ -175,17 +280,20 @@ router.route('/availability').post(function (req, res) {
   });
 });
 
-router.route('/listings/:id/sessions/batch').post(function (req, res) {
-  var times;
-  try {
-    times = JSON.parse(req.body.sessions).times;
-  } catch (err) {
-    res.status(422).json(err);
-  }
-  Listings.addSessionsForListing(req.params.id, times).then(function (response) {
-    res.json(response);
-  });
-});
+// router.route('/listings/:id/sessions/batch')
+// .post(function(req, res) {
+//   var times;
+//   try {
+//     times = JSON.parse(req.body.sessions).times 
+//   } catch(err) {
+//     res.status(422).json(err);
+//   }
+//   Listings.addSessionsForListing(req.params.id, times)
+//   .then(function(response) {
+//     res.json(response);
+//   });
+// });
+
 
 router.route('/services/add').post(function (req, res) {
   var data = {};
@@ -226,5 +334,120 @@ router.route('/services/add').post(function (req, res) {
     res.status(422).json();
   }
 });
+
+router.route('/payment-methods').get(function () {
+  var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(req, res) {
+    var paymentMethods;
+    return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      while (1) {
+        switch (_context4.prev = _context4.next) {
+          case 0:
+            _context4.prev = 0;
+            _context4.next = 3;
+            return Users.getPaymentMethods(req.decoded._id);
+
+          case 3:
+            paymentMethods = _context4.sent;
+
+            res.json(paymentMethods);
+            _context4.next = 10;
+            break;
+
+          case 7:
+            _context4.prev = 7;
+            _context4.t0 = _context4['catch'](0);
+
+            res.status(422).json({ error: _context4.t0 });
+
+          case 10:
+          case 'end':
+            return _context4.stop();
+        }
+      }
+    }, _callee4, this, [[0, 7]]);
+  }));
+
+  return function (_x7, _x8) {
+    return _ref4.apply(this, arguments);
+  };
+}()).post(function () {
+  var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(req, res) {
+    var newCard, token, user;
+    return regeneratorRuntime.wrap(function _callee5$(_context5) {
+      while (1) {
+        switch (_context5.prev = _context5.next) {
+          case 0:
+            _context5.prev = 0;
+            newCard = void 0;
+            token = _.get(req.body, 'stripeToken');
+            _context5.next = 5;
+            return Users.getById(req.decoded._id);
+
+          case 5:
+            user = _context5.sent;
+
+            if (!(user && user.attributes && !user.attributes.stripe_customer_id)) {
+              _context5.next = 12;
+              break;
+            }
+
+            _context5.next = 9;
+            return StripeActions.addCustomer(user.attributes, token);
+
+          case 9:
+            newCard = _context5.sent;
+            _context5.next = 15;
+            break;
+
+          case 12:
+            _context5.next = 14;
+            return StripeActions.addCard(token, user.stripe_customer_id, user);
+
+          case 14:
+            newCard = _context5.sent;
+
+          case 15:
+            _context5.next = 17;
+            return Users.updateById(newCard.user_id, { stripe_customer_id: newCard.card.id });
+
+          case 17:
+            res.json(newCard.id);
+            _context5.next = 23;
+            break;
+
+          case 20:
+            _context5.prev = 20;
+            _context5.t0 = _context5['catch'](0);
+
+            res.status(422).json({ error: _context5.t0 });
+
+          case 23:
+          case 'end':
+            return _context5.stop();
+        }
+      }
+    }, _callee5, this, [[0, 20]]);
+  }));
+
+  return function (_x9, _x10) {
+    return _ref5.apply(this, arguments);
+  };
+}()).delete(function () {
+  var _ref6 = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(req, res) {
+    return regeneratorRuntime.wrap(function _callee6$(_context6) {
+      while (1) {
+        switch (_context6.prev = _context6.next) {
+          case 0:
+          case 'end':
+            return _context6.stop();
+        }
+      }
+    }, _callee6, this);
+  }));
+
+  return function (_x11, _x12) {
+    return _ref6.apply(this, arguments);
+  };
+}());
 
 module.exports = router;
