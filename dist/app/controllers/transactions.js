@@ -5,7 +5,7 @@ var BluebirdPromise = require('bluebird');
 var _ = require('lodash');
 
 // Actions
-var StripeActions = require('./StripeActions');
+var StripeActions = require('./stripeActions');
 
 // Models
 var Transactions; //= require('../models/transactions');
