@@ -50,6 +50,7 @@ router.route('/')
   });
 
   function facebookLogin(req, res) {
+    console.log(req.body.userId)
     return getUser({
       'facebook_user_id': req.body.userId
     })

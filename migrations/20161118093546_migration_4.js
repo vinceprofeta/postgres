@@ -141,6 +141,7 @@ exports.up = function(knex, Promise) {
     // ________________________________________________________
 
     knex.schema.createTable('calendarScheduleOverride', function(table) {
+      // TODO make it so you cant have duplicates. unique by start end cid
       table.increments();
       table.integer('calendar_id').references('calendars.id').notNullable();
       table.boolean('available').notNullable();

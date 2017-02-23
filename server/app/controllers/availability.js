@@ -14,50 +14,68 @@ var Services = bookshelf.model('services');
 
 var availability = {};
 
-availability.setAvailability = function(userId, data) {
-  return new Promise(function(resolve, reject) {
+availability.setAvailability = async function(userId, data) {
     try {
       data = JSON.parse(data.availability);
-      const {calendars, times, days, interval} = data;
+      const {calendars, times, days, interval, dates} = data;
       const timesSorted = sortTimes(times);
       const input = createCalendarInputs(days, calendars);
 
-      bookshelf.knex.transaction(function(trx) {
-        return bookshelf.knex.raw(getUsersCalendars(userId, calendars)).transacting(trx)
-        .then((ids) => {
-          console.log(ids)
-          ids = _.map(ids.rows, (row) => {
-            return row.id
-          })
-          const deleteQuery = getDeleteQuery(userId, days, ids);
-          return bookshelf.knex.raw(deleteQuery).transacting(trx)
-        })
-        .then((w) => {
-          return bookshelf.knex.insert(input, '*').into('calendarRecurringDay').transacting(trx)
-        })
-        .then((days) => {
-          const createdTimes = createTimeInputs(days, timesSorted)
-          return bookshelf.knex.insert(createdTimes, '*').into('calendarRecurringTime').transacting(trx)
-          .then(trx.commit)
-          .catch(trx.rollback);
-        })
-        .then(() => {
-          resolve({success: true}) /// NEEEED TO ADD CONFLICTS?
-        })
-        .catch((err) => {
-          // console.log(err)
-          reject({error: 'Error updating availability'});
-          return;
-        })
+      return await bookshelf.knex.transaction(async function(trx) {
+        let ids = await bookshelf.knex.raw(getUsersCalendars(userId, calendars)).transacting(trx)
+        ids = _.map(ids.rows, (row) => row.id)
+
+
+        const deleteQuery = await bookshelf.knex.raw(getDeleteQuery(userId, days, ids)).transacting(trx)
+        const crd = await bookshelf.knex.insert(input, '*').into('calendarRecurringDay').transacting(trx)
+       
+        const createdTimes = createTimeInputs(crd, timesSorted)
+       
+        const crt = await bookshelf.knex.insert(createdTimes, '*').into('calendarRecurringTime').transacting(trx)
+
+        
+        if (dates) {
+          const deletedOverrides = await bookshelf.knex.raw(getOverrideDatesToDelete(dates)).transacting(trx)
+          const insertedOverrides = await bookshelf.knex.insert(insertOverrideDates(dates), '*').into('calendarScheduleOverride').transacting(trx)
+        }
+        // TODO ADD RESPONSE
+        return true;
+        
       });
 
     } catch(err) {
-      // console.log(err)
-      reject({error: 'Error updating availability'});
-      return;
+      throw err;
     }
-  });
 };
+
+
+function getOverrideDatesToDelete(dates) {
+  dates = _.map(dates, (d)=> {
+    return `'${d.start}'::TIMESTAMP::DATE`
+  })
+  return`
+    DELETE from "calendarScheduleOverride" cso
+    WHERE date_trunc('day', cso.start) = any (array[${dates}])`
+}
+
+function insertOverrideDates(dates) {
+  return _.map(dates, (d)=> {
+    const obj = {
+      start: d.start,
+      end: d.end,
+      available: true,
+      calendar_id: 1
+    }
+    _.forIn(obj, function(value, key) {
+      if (value === null || value === undefined) {
+        throw 'invalid date input'
+      }
+    });
+    return obj
+  })
+}
+
+
 
 
 availability.getAll = function(properties) {

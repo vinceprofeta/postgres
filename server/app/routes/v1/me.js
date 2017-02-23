@@ -267,11 +267,14 @@ router.route('/calendars')
 
 
   router.route('/availability')
-  .post(function(req, res) {
-    Availability.setAvailability(req.decoded._id, req.body)
-    .then(function(response) {
+  .post(async function(req, res) {
+    try {
+      const response = await Availability.setAvailability(req.decoded._id, req.body)
       res.json(response);
-    });
+    } catch(err) {
+      res.status(422).json(err);
+    }
+    
   });
 
 
